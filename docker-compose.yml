@@ -18,6 +18,8 @@ services:
       - "8001:8001"
     environment:
       - DATABASE_NAME=iotsignals
+      - DATABASE_HOST=database
+      - DATABASE_USER=iotsignals
       - DATABASE_PASSWORD=insecure
       - UWSGI_HTTP=0.0.0.0:8001
       - UWSGI_MASTER=1
@@ -31,8 +33,6 @@ services:
       - UWSGI_DIE_ON_TERM=1
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
-      - DATABASE_HOST=database
-      - DATABASE_USER=iotsignals
 
   locust:
     build: .
@@ -42,3 +42,16 @@ services:
     links:
       - api
     command: bash -c "locust -f /opt/src/locustfile.py --host=http://api:8001 --no-web -c 250 -r 25 --run-time 1m"
+
+  refresh_materialized_view:
+    build: ./api
+    volumes:
+      - ./api/src:/app
+    links:
+      - database
+    environment:
+      - DATABASE_NAME=iotsignals
+      - DATABASE_PASSWORD=insecure
+      - DATABASE_HOST=database
+      - DATABASE_USER=iotsignals
+    command: python manage.py refresh_cmsa_15min_materialized_view
