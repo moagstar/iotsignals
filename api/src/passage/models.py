@@ -67,3 +67,26 @@ class Passage(models.Model):
     # TNO Versit klasse.
     # Zie ook: https://www.tno.nl/media/2451/lowres_tno_versit.pdf
     versit_klasse = models.CharField(null=True, max_length=255)
+
+
+class PassageHourAggregation(models.Model):
+    date = models.DateField()
+    year = models.IntegerField()
+    month = models.IntegerField()
+    day = models.IntegerField()
+    week = models.IntegerField()
+    dow = models.IntegerField()  # day of week
+    hour = models.IntegerField()
+    camera_id = models.CharField(max_length=255)
+    camera_naam = models.CharField(max_length=255)
+    rijrichting = models.IntegerField()
+    camera_kijkrichting = models.FloatField()
+    kenteken_land = models.TextField()
+    voertuig_soort = models.CharField(max_length=25)
+    europese_voertuigcategorie = models.CharField(max_length=2)
+    taxi_indicator = models.BooleanField()
+    diesel = models.IntegerField(null=True)
+    gasoline = models.IntegerField(null=True)
+    electric = models.IntegerField(null=True)
+    toegestane_maximum_massa_voertuig = models.TextField()
+    count = models.IntegerField()
