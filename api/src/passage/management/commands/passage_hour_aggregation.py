@@ -89,7 +89,7 @@ class Command(BaseCommand):
                END                                   AS
                toegestane_maximum_massa_voertuig,
                COUNT(*)
-        FROM `passage_passage`
+        FROM passage_passage
         WHERE EXTRACT(YEAR FROM created_at) :: int = {run_date.year}
         AND EXTRACT(MONTH FROM created_at) :: int = {run_date.month}
         AND EXTRACT(DAY FROM created_at) :: int = {run_date.day}
