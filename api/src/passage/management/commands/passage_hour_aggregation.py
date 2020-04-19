@@ -4,12 +4,10 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.db import connection
 
-from passage.models import Passage, PassageHourAggregation
-
 log = logging.getLogger(__name__)
 
-# Data collection was started sometime in 2018, so to be sure, we start the first run on the first of january 2019
-FIRST_DATE = date(2018, 1, 1)
+# Data collection was started sometime in january 2019, so to be sure, we start the first run on the first of january 2019
+FIRST_DATE = date(2019, 1, 1)
 
 
 class Command(BaseCommand):
@@ -172,8 +170,8 @@ class Command(BaseCommand):
         if options['first_run']:
             run_date = FIRST_DATE
             while run_date < date.today():
-                run_date = run_date + timedelta(days=1)
                 self._run_query_from_date(run_date)
+                run_date = run_date + timedelta(days=1)
 
         else:
             run_date = date.today() - timedelta(days=1)
