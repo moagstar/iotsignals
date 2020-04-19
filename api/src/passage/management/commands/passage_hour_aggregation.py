@@ -160,7 +160,6 @@ class Command(BaseCommand):
         log.info(delete_query)
         with connection.cursor() as cursor:
             cursor.execute(delete_query)
-            log.info(cursor.fetchall())
 
         log.info(f"Run aggregation for date {run_date}")
         aggregation_query = self._get_aggreagation_query(run_date)
@@ -168,7 +167,6 @@ class Command(BaseCommand):
         log.info(aggregation_query)
         with connection.cursor() as cursor:
             cursor.execute(aggregation_query)
-            log.info(cursor.fetchall())
 
     def handle(self, *args, **options):
         if options['first_run']:
