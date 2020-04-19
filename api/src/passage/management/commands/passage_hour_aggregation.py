@@ -158,15 +158,17 @@ class Command(BaseCommand):
         delete_query = self._get_delete_query(run_date)
         log.info(f"Run the following query:")
         log.info(delete_query)
-        delete_result = Passage.objects.raw(delete_query)[0]
-        log.info("Delete result", delete_result)
+        with connection.cursor() as cursor:
+            cursor.execute(delete_query)
+            log.info(cursor.fetchall())
 
         log.info(f"Run aggregation for date {run_date}")
         aggregation_query = self._get_aggreagation_query(run_date)
         log.info(f"Run the following query:")
         log.info(aggregation_query)
-        aggregation_result = Passage.objects.raw(aggregation_query)[0]
-        log.info("Aggregation result", aggregation_result)
+        with connection.cursor() as cursor:
+            cursor.execute(aggregation_query)
+            log.info(cursor.fetchall())
 
     def handle(self, *args, **options):
         if options['first_run']:
