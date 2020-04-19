@@ -144,10 +144,12 @@ class Command(BaseCommand):
     """
 
     def _run_query_from_date(self, run_date):
-        log.info(f"Running aggregation for date {run_date}")
-
+        log.info(f"Run aggregation for date {run_date}")
         query = self._get_query(run_date)
-        Passage.objects.raw(query)
+        log.info(f"Run the following query:")
+        log.info(query)
+        result = Passage.objects.raw(query)
+        log.info("Result", result)
 
     def handle(self, *args, **options):
         if options['first_run']:
