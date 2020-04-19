@@ -21,7 +21,16 @@ class Command(BaseCommand):
             help='Do the first run of the passages aggregation',
         )
 
-    def _get_query(self, run_date):
+    def _get_delete_query(self, run_date):
+        return f""" 
+        DELETE FROM passage_passagehouraggregation
+        WHERE year = {run_date.year}
+        AND month = {run_date.month}
+        AND day = {run_date.day}
+        ;
+        """
+
+    def _get_aggreagation_query(self, run_date):
         return f"""
         INSERT INTO passage_passagehouraggregation (
             date, 
@@ -90,9 +99,9 @@ class Command(BaseCommand):
                toegestane_maximum_massa_voertuig,
                COUNT(*)
         FROM passage_passage
-        WHERE EXTRACT(YEAR FROM created_at) :: int = {run_date.year}
-        AND EXTRACT(MONTH FROM created_at) :: int = {run_date.month}
-        AND EXTRACT(DAY FROM created_at) :: int = {run_date.day}
+        WHERE EXTRACT(YEAR FROM passage_at) :: int = {run_date.year}
+        AND EXTRACT(MONTH FROM passage_at) :: int = {run_date.month}
+        AND EXTRACT(DAY FROM passage_at) :: int = {run_date.day}
         GROUP  BY DATE(passage_at),
                   EXTRACT(YEAR FROM passage_at) :: int,
                   EXTRACT(MONTH FROM passage_at) :: int,
@@ -141,15 +150,23 @@ class Command(BaseCommand):
                   DATE(passage_at),
                   EXTRACT(HOUR FROM passage_at) :: int  
         ;
-    """
+        """
 
     def _run_query_from_date(self, run_date):
-        log.info(f"Run aggregation for date {run_date}")
-        query = self._get_query(run_date)
+
+        log.info(f"Delete previously made aggregations for date {run_date}")
+        delete_query = self._get_delete_query(run_date)
         log.info(f"Run the following query:")
-        log.info(query)
-        result = Passage.objects.raw(query)
-        log.info("Result", result[0])
+        log.info(delete_query)
+        delete_result = Passage.objects.raw(delete_query)[0]
+        log.info("Delete result", delete_result)
+
+        log.info(f"Run aggregation for date {run_date}")
+        aggregation_query = self._get_aggreagation_query(run_date)
+        log.info(f"Run the following query:")
+        log.info(aggregation_query)
+        aggregation_result = Passage.objects.raw(aggregation_query)[0]
+        log.info("Aggregation result", aggregation_result)
 
     def handle(self, *args, **options):
         if options['first_run']:
