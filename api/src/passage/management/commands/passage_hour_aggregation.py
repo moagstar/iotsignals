@@ -149,7 +149,7 @@ class Command(BaseCommand):
         log.info(f"Run the following query:")
         log.info(query)
         result = Passage.objects.raw(query)
-        log.info("Result", result)
+        log.info("Result", result[0])
 
     def handle(self, *args, **options):
         if options['first_run']:
