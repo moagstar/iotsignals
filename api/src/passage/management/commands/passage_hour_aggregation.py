@@ -21,7 +21,7 @@ class Command(BaseCommand):
             help='Do the first run of the passages aggregation',
         )
 
-    def _get_query(self, table_name):
+    def _get_query(self, run_date):
         return f"""
         INSERT INTO passage_passagehouraggregation (
             date, 
@@ -89,9 +89,10 @@ class Command(BaseCommand):
                END                                   AS
                toegestane_maximum_massa_voertuig,
                COUNT(*)
-        FROM   {table_name}
-        -- bij datapunt heet deze tabel public.passage_passage_20181016
-        -- vervang de datum voor de dag van gisteren
+        FROM `passage_passage`
+        WHERE EXTRACT(YEAR FROM created_at) :: int = {run_date.year}
+        AND EXTRACT(MONTH FROM created_at) :: int = {run_date.month}
+        AND EXTRACT(DAY FROM created_at) :: int = {run_date.day}
         GROUP  BY DATE(passage_at),
                   EXTRACT(YEAR FROM passage_at) :: int,
                   EXTRACT(MONTH FROM passage_at) :: int,
@@ -144,15 +145,8 @@ class Command(BaseCommand):
 
     def _run_query_from_date(self, run_date):
         log.info(f"Running aggregation for date {run_date}")
-        table_name = f"passage_passage_{run_date.strftime('%Y%m%d')}"
 
-        if table_name not in connection.introspection.table_names():
-            # The table does not exist, so we don't run the query
-            log.info(f"The table '{table_name}' does not exist. So we don't run the query.")
-            return
-
-        # The table exists, which means we might have some data stored for that day
-        query = self._get_query(table_name)
+        query = self._get_query(run_date)
         Passage.objects.raw(query)
 
     def handle(self, *args, **options):
