@@ -97,8 +97,8 @@ class Command(BaseCommand):
                toegestane_maximum_massa_voertuig,
                COUNT(*)
         FROM passage_passage
-        WHERE passage_at >= {run_date}
-        AND passage_at < {run_date + timedelta(days=1)}
+        WHERE passage_at >= '{run_date}'
+        AND passage_at < '{run_date + timedelta(days=1)}'
         GROUP  BY DATE(passage_at),
                   EXTRACT(YEAR FROM passage_at) :: int,
                   EXTRACT(MONTH FROM passage_at) :: int,
@@ -157,6 +157,7 @@ class Command(BaseCommand):
         log.info(delete_query)
         with connection.cursor() as cursor:
             cursor.execute(delete_query)
+            log.info(f"Deleted {cursor.rowcount} records")
 
         log.info(f"Run aggregation for date {run_date}")
         aggregation_query = self._get_aggreagation_query(run_date)
@@ -164,6 +165,7 @@ class Command(BaseCommand):
         log.info(aggregation_query)
         with connection.cursor() as cursor:
             cursor.execute(aggregation_query)
+            log.info(f"Inserted {cursor.rowcount} records")
 
     def handle(self, *args, **options):
         if options['first_run']:
