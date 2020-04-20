@@ -97,9 +97,8 @@ class Command(BaseCommand):
                toegestane_maximum_massa_voertuig,
                COUNT(*)
         FROM passage_passage
-        WHERE EXTRACT(YEAR FROM passage_at) :: int = {run_date.year}
-        AND EXTRACT(MONTH FROM passage_at) :: int = {run_date.month}
-        AND EXTRACT(DAY FROM passage_at) :: int = {run_date.day}
+        WHERE passage_at >= {run_date}
+        AND passage_at < {run_date + timedelta(days=1)}
         GROUP  BY DATE(passage_at),
                   EXTRACT(YEAR FROM passage_at) :: int,
                   EXTRACT(MONTH FROM passage_at) :: int,
