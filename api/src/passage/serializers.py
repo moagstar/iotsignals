@@ -1,12 +1,12 @@
-from django.contrib.gis.geos import Point
+import logging
 
+from datapunt_api.rest import DisplayField, HALSerializer
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from rest_framework import serializers
-from datapunt_api.rest import HALSerializer
-from datapunt_api.rest import DisplayField
 
 from .models import Passage
 
-import logging
 log = logging.getLogger(__name__)
 
 
@@ -33,3 +33,10 @@ class PassageDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Passage
         fields = '__all__'
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError as e:
+            log.error(f"ValidationError for id {validated_data['id']}")
+            raise ValidationError(str(e))
