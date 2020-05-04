@@ -158,6 +158,17 @@ class PassageAPITestV0(APITestCase):
         self.assertEqual(before, get_records_in_partition())
         self.assertEqual(res.status_code, 400, res.data)
 
+    def test_post_duplicate_key(self):
+        """ Test posting a new passage with a duplicate key """
+        before = get_records_in_partition()
+
+        res = self.client.post(self.URL, TEST_POST, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+
+        # # Post the same message again
+        res = self.client.post(self.URL, TEST_POST, format='json')
+        self.assertEqual(res.status_code, 409, res.data)
+
     def test_list_passages(self):
         """ Test listing all passages """
         PassageFactory.create()

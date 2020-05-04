@@ -1,10 +1,10 @@
 import logging
 
 from datapunt_api.rest import DisplayField, HALSerializer
-from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from rest_framework import serializers
 
+from .errors import DuplicateIdError
 from .models import Passage
 
 log = logging.getLogger(__name__)
@@ -38,5 +38,5 @@ class PassageDetailSerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError as e:
-            log.error(f"ValidationError for id {validated_data['id']}")
-            raise ValidationError(str(e))
+            log.error(f"DuplicateIdError for id {validated_data['id']}")
+            raise DuplicateIdError(str(e))
