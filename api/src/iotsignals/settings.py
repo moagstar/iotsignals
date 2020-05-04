@@ -38,7 +38,6 @@ INSTALLED_APPS += [
     'datetimeutc',
     'iotsignals',
     'passage',
-    'peoplemeasurement',
 ]
 
 ROOT_URLCONF = 'iotsignals.urls'
