@@ -38,5 +38,5 @@ class PassageDetailSerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError as e:
-            log.error(f"DuplicateIdError for id {validated_data['id']}")
+            log.info(f"DuplicateIdError for id {validated_data['id']}")
             raise DuplicateIdError(str(e))
