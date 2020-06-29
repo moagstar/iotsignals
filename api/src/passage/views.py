@@ -57,7 +57,7 @@ class PassageViewSet(DatapuntViewSetWritable):
 
     queryset = models.Passage.objects.all().order_by('passage_at')
 
-    http_method_names = ['post', 'list', 'get']
+    http_method_names = ['post']
 
     filter_backends = (DjangoFilterBackend,)
     filter_class = PassageFilter
