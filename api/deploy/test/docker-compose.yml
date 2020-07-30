@@ -19,5 +19,6 @@ services:
       PARKEERVAKKEN_OS_PASSWORD:
       ENVIRONMENT: test
     volumes:
-        - ./run_tests.sh:/app/run_tests.sh
+      - ./run_tests.sh:/app/run_tests.sh
+      - ../../src:/app
     command: /app/run_tests.sh

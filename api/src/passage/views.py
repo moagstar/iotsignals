@@ -1,15 +1,18 @@
-from datapunt_api.rest import DatapuntViewSetWritable
 from datapunt_api.pagination import HALCursorPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
+from datapunt_api.rest import DatapuntViewSetWritable
+from django.db.models import F, Sum
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet
+from rest_framework import exceptions, generics, mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from writers import CSVExport
 
 from passage.case_converters import to_snakecase
-from . import models
-from . import serializers
+
+from . import models, serializers
 
 
 class PassageFilter(FilterSet):
-
     class Meta(object):
         model = models.Passage
         fields = {
@@ -51,13 +54,11 @@ class PassagePager(HALCursorPagination):
     ordering = "-passage_at"
 
 
-class PassageViewSet(DatapuntViewSetWritable):
+class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.PassageDetailSerializer
     serializer_detail_class = serializers.PassageDetailSerializer
 
     queryset = models.Passage.objects.all().order_by('passage_at')
-
-    http_method_names = ['post']
 
     filter_backends = (DjangoFilterBackend,)
     filter_class = PassageFilter
@@ -70,3 +71,24 @@ class PassageViewSet(DatapuntViewSetWritable):
         request.data.clear()
         request.data.update(tmp)
         return super().create(request, *args, **kwargs)
+
+    @action(methods=['get'], detail=False, url_path='export-taxi')
+    def export_taxi(self, request, *args, **kwargs):
+        # 1. Get the iterator of the QuerySet
+        iterator = (
+            models.PassageHourAggregation.objects.annotate(datum=F('date'))
+            .values('datum')
+            .annotate(aantal_taxi_passages=Sum('count'))
+            .filter(taxi_indicator=True)
+        )
+
+        # 2. Create the instance of our CSVExport class
+        csv_export = CSVExport()
+
+        # 3. Export (download) the file
+        return csv_export.export(
+            "export",
+            iterator,
+            lambda x: [x['datum'], x['aantal_taxi_passages']],
+            header=['datum', 'aantal_taxi_passages'],
+        )

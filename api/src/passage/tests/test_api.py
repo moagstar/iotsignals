@@ -1,9 +1,13 @@
+import logging
+from datetime import datetime
+
+from django.db import connection
+from django.urls import reverse
+from model_bakery import baker
+from passage.case_converters import to_camelcase
 from rest_framework.test import APITestCase
 
 from .factories import PassageFactory
-from django.db import connection
-import logging
-from passage.case_converters import to_camelcase
 
 log = logging.getLogger(__name__)
 
@@ -18,41 +22,17 @@ TEST_POST = {
     "camera_id": "ddddffff-4444-aaaa-7777-aaaaeeee1111",
     "camera_naam": "Spaarndammerdijk [Z]",
     "camera_kijkrichting": 0,
-    "camera_locatie": {
-        "type": "Point",
-        "coordinates": [
-            4.845423,
-            52.386831
-        ]
-    },
+    "camera_locatie": {"type": "Point", "coordinates": [4.845423, 52.386831]},
     "kenteken_land": "NL",
     "kenteken_nummer_betrouwbaarheid": 640,
     "kenteken_land_betrouwbaarheid": 690,
     "kenteken_karakters_betrouwbaarheid": [
-        {
-            "betrouwbaarheid": 650,
-            "positie": 1
-        },
-        {
-            "betrouwbaarheid": 630,
-            "positie": 2
-        },
-        {
-            "betrouwbaarheid": 640,
-            "positie": 3
-        },
-        {
-            "betrouwbaarheid": 660,
-            "positie": 4
-        },
-        {
-            "betrouwbaarheid": 620,
-            "positie": 5
-        },
-        {
-            "betrouwbaarheid": 640,
-            "positie": 6
-        }
+        {"betrouwbaarheid": 650, "positie": 1},
+        {"betrouwbaarheid": 630, "positie": 2},
+        {"betrouwbaarheid": 640, "positie": 3},
+        {"betrouwbaarheid": 660, "positie": 4},
+        {"betrouwbaarheid": 620, "positie": 5},
+        {"betrouwbaarheid": 640, "positie": 6},
     ],
     "indicatie_snelheid": 23,
     "automatisch_verwerkbaar": True,
@@ -66,13 +46,8 @@ TEST_POST = {
     "europese_voertuigcategorie_toevoeging": "e",
     "taxi_indicator": True,
     "maximale_constructie_snelheid_bromsnorfiets": 25,
-    "brandstoffen": [
-        {
-            "brandstof": "Benzine",
-            "volgnr": 1
-        }
-    ],
-    "versit_klasse": "test klasse"
+    "brandstoffen": [{"brandstof": "Benzine", "volgnr": 1}],
+    "versit_klasse": "test klasse",
 }
 
 
@@ -179,9 +154,10 @@ class PassageAPITestV0(APITestCase):
         self.client.post(self.URL, TEST_POST, format='json')
 
         # Then check if I cannot update it
-        response = self.client.put(f'{self.URL}{TEST_POST["id"]}/', TEST_POST, format='json')
-        self.assertEqual(response.status_code, 405)
-
+        response = self.client.put(
+            f'{self.URL}{TEST_POST["id"]}/', TEST_POST, format='json'
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_passages_not_allowed(self):
         # first post a record
@@ -189,4 +165,21 @@ class PassageAPITestV0(APITestCase):
 
         # Then check if I cannot update it
         response = self.client.delete(f'{self.URL}{TEST_POST["id"]}/')
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 404)
+
+    def test_passage_taxi_export(self):
+
+        baker.make(
+            'passage.PassageHourAggregation',
+            count=2,
+            taxi_indicator=True,
+            _quantity=500,
+        )
+
+        # first post a record
+        url = reverse('v0:passage-export-taxi')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        date = datetime.now().strftime("%Y-%m-%d")
+        assert response.content == f'datum,aantal_taxi_passages\r\n{date},1000\r\n'.encode()

@@ -33,6 +33,8 @@ services:
       - UWSGI_DIE_ON_TERM=1
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
+    command:
+      python manage.py runserver_plus 0.0.0.0:8001 --print-sql
 
   locust:
     build: .
@@ -55,3 +57,4 @@ services:
       - DATABASE_USER=iotsignals
       - DATABASE_PASSWORD=insecure
     command: python manage.py passage_hour_aggregation
+
