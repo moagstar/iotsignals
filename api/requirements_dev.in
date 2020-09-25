@@ -11,5 +11,7 @@ pip-tools
 # Useful extra developer packages:
 factory-boy
 locust
-ipython
+ipdb
 model_bakery
+isort
+black

@@ -1,9 +1,11 @@
-import random
 import datetime
+import random
+
 import factory
-from django.utils import timezone
 from django.contrib.gis.geos import Point
+from django.utils import timezone
 from factory import fuzzy
+from factory.django import DjangoModelFactory
 from passage.models import Passage
 
 
@@ -19,22 +21,15 @@ def get_puntje():
 def kenteken_karakter_betrouwbaarheid():
     char_list = []
     for n in range(6):
-        char_list.append({
-            'betrouwbaarheid': random.randint(1, 1000),
-            'positie': n
-        })
+        char_list.append({'betrouwbaarheid': random.randint(1, 1000), 'positie': n})
     return char_list
 
 
 def get_brandstoffen():
-    return [{
-        'brandstof': 'Benzine',
-        'volgnr': 1
-    }]
+    return [{'brandstof': 'Benzine', 'volgnr': 1}]
 
 
-class PassageFactory(factory.DjangoModelFactory):
-
+class PassageFactory(DjangoModelFactory):
     class Meta:
         model = Passage
 
@@ -53,10 +48,8 @@ class PassageFactory(factory.DjangoModelFactory):
     kenteken_land_betrouwbaarheid = fuzzy.FuzzyInteger(1.0, 1000.0, 1)
     kenteken_karakters_betrouwbaarheid = kenteken_karakter_betrouwbaarheid()
     indicatie_snelheid = fuzzy.FuzzyDecimal(0, 500)
-    automatisch_verwerkbaar = factory.Faker(
-        'boolean', chance_of_getting_true=50)
-    voertuig_soort = random.choice(
-        ['Personenauto', 'Bromfiets', 'Bedrijfsauto', 'Bus'])
+    automatisch_verwerkbaar = factory.Faker('boolean', chance_of_getting_true=50)
+    voertuig_soort = random.choice(['Personenauto', 'Bromfiets', 'Bedrijfsauto', 'Bus'])
     merk = factory.Faker('first_name')
     inrichting = factory.Faker('first_name')
     datum_eerste_toelating = fuzzy.FuzzyDate(datetime.date(2008, 1, 1))

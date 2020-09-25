@@ -1,5 +1,7 @@
+import csv
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from random import randint
 
 from django.db import connection
 from django.urls import reverse
@@ -182,4 +184,74 @@ class PassageAPITestV0(APITestCase):
         self.assertEqual(response.status_code, 200)
 
         date = datetime.now().strftime("%Y-%m-%d")
-        assert response.content == f'datum,aantal_taxi_passages\r\n{date},1000\r\n'.encode()
+        assert (
+            response.content
+            == f'datum,aantal_taxi_passages\r\n{date},1000\r\n'.encode()
+        )
+
+    def test_passage_export(self):
+
+        reading_count = 4
+        camera_count = 3
+        readings_per_camera = 2
+
+        now = datetime.now()
+        today = datetime(now.year, now.month, now.day)
+
+        # Get the first day of the week; 2 weeks ago
+        start_date = today - timedelta(days=now.weekday(), weeks=2)
+
+        # Fill 3 weeks of data to ensure our export will only get the
+        # previous week
+        for day in range(7 * 3):
+            # Generate 24 hours of data
+            for hour in range(24):
+                date = start_date + timedelta(days=day, hours=hour)
+
+                # Generate multiple records per camera
+                for i in range(camera_count):
+                    num = i % camera_count + 1
+                    baker.make(
+                        'passage.PassageHourAggregation',
+                        camera_id=num,
+                        camera_naam=f'Camera: {num}',
+                        count=reading_count,
+                        date=date,
+                        year=date.year,
+                        week=date.isocalendar()[1],
+                        hour=date.hour,
+                        taxi_indicator=True,
+                        _quantity=readings_per_camera,
+                    )
+
+        # first post a record
+        url = reverse('v0:passage-export')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        lines = response.content.decode().strip().split('\r\n')
+        content = list(csv.reader(lines))
+        header = content.pop(0)
+        assert header == ['camera_id', 'camera_naam', 'bucket', 'sum']
+        assert len(content) == 7 * 24 * camera_count
+
+
+        i = 0
+        expected_content = []
+        previous_week = today - timedelta(days=now.weekday(), weeks=1)
+        for day in range(7):
+            for hour in range(24):
+                expected_datetime = previous_week + timedelta(days=day, hours=hour)
+                for camera in range(camera_count):
+                    camera += 1
+                    expected_row = [
+                        str(camera),
+                        f'Camera: {camera}',
+                        expected_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                        str(reading_count * readings_per_camera),
+                    ]
+                    expected_content.append(tuple(expected_row))
+
+        content = set(map(tuple, content))
+        expected_content = set(map(tuple, expected_content))
+        assert set(expected_content) == set(content)

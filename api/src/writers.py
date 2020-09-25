@@ -1,7 +1,7 @@
 import csv
 from itertools import chain
 
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 
 
 class CSVBuffer:
@@ -15,18 +15,26 @@ class CSVBuffer:
 
 
 class CSVExport:
-    """Class to (download) an iterator to a 
+    """Class to (download) an iterator to a
     CSV file."""
 
-    def export(self, filename, iterator, serializer, header):
+    def export(self, filename, iterator, serializer=None, header=None, streaming=False):
         # 1. Create our writer object with the pseudo buffer
         writer = csv.writer(CSVBuffer())
 
+        if not header:
+            header = iterator[0].keys()
+
+        if not serializer:
+            serializer = lambda x: x.values()
+
         # 2. Create the HttpResponse using our iterator as content
-        response = HttpResponse(
+        cls = StreamingHttpResponse if streaming else HttpResponse
+
+        response = cls(
             chain(
                 (writer.writerow(col for col in header)),
-                (writer.writerow(serializer(data)) for data in iterator),
+                (writer.writerow(serializer(data)) for data in iterator if data),
             ),
             content_type="text/csv",
         )
