@@ -34,6 +34,7 @@ services:
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
       - PYTHONBREAKPOINT
+      - PYTHONDONTWRITEBYTECODE=1
       - HOME=/tmp
     command:
       python manage.py runserver_plus 0.0.0.0:8001 --print-sql
@@ -43,6 +44,8 @@ services:
     volumes:
       - ./reports:/opt/reports
       - ./:/opt/src
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
     links:
       - api
     command: bash -c "locust -f /opt/src/locustfile.py --host=http://api:8001 --headless --users 250 --hatch-rate 25 --run-time 30s"

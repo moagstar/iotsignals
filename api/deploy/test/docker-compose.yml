@@ -19,6 +19,7 @@ services:
       PARKEERVAKKEN_OS_PASSWORD:
       ENVIRONMENT: test
       PYTHONBREAKPOINT: ipdb.set_trace
+      PYTHONDONTWRITEBYTECODE: 1
       HOME: /tmp
     volumes:
       - ./run_tests.sh:/app/run_tests.sh
