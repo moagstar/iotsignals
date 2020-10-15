@@ -5,6 +5,11 @@
 
 PYTHON = python3
 
+dc = docker-compose
+run = $(dc) run --rm
+manage = $(run) api python manage.py
+pytest = $(run) test pytest $(ARGS)
+
 help:                               ## Show this help.
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 
@@ -19,3 +24,12 @@ requirements: pip-tools             ## Upgrade requirements (in requirements.in)
 	pip-compile --upgrade --output-file requirements_dev.txt requirements_dev.in
 
 upgrade: requirements install       ## Run 'requirements' and 'install' targets
+
+build:                              ## Build docker image
+	$(dc) build
+
+push: build                         ## Push docker image to registry
+	$(dc) push
+
+test:
+	cd deploy/test; $(run) tests

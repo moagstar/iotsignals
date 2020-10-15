@@ -33,6 +33,8 @@ services:
       - UWSGI_DIE_ON_TERM=1
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
+      - PYTHONBREAKPOINT
+      - HOME=/tmp
     command:
       python manage.py runserver_plus 0.0.0.0:8001 --print-sql
 
