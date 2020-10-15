@@ -22,5 +22,5 @@ services:
       HOME: /tmp
     volumes:
       - ./run_tests.sh:/app/run_tests.sh
-      - ../../src:/app
+      # - ../../src:/app
     command: /app/run_tests.sh
