@@ -8,11 +8,11 @@ services:
       POSTGRES_DB: iotsignals
       POSTGRES_USER: iotsignals
       POSTGRES_PASSWORD: insecure
-  api:
+  api: &api
     build: ./api
     volumes:
       - ./api/src:/app
-    links:
+    depends_on:
       - database
     ports:
       - "8001:8001"
@@ -29,14 +29,19 @@ services:
       - UWSGI_VACUUM=1
       - UWSGI_STATIC_EXPIRES=/* 3600
       - UWSGI_OFFLOAD_THREADS=1
-      - UWSGI_HARAKIRI=15
       - UWSGI_DIE_ON_TERM=1
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
+      - UWSGI_HTTP_AUTO_GZIP=1
       - PYTHONBREAKPOINT
       - PYTHONDONTWRITEBYTECODE=1
       - HOME=/tmp
     command:
+      uwsgi
+
+  dev:
+    <<: *api
+    command: 
       python manage.py runserver_plus 0.0.0.0:8001 --print-sql
 
   locust:
