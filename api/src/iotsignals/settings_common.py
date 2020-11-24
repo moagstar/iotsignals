@@ -21,6 +21,9 @@ DATAPUNT_API_URL = os.getenv("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/
 
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
 
+# The token that is allowed to post data to protected endpoints
+AUTHORIZATION_TOKEN = os.environ['AUTHORIZATION_TOKEN']
+
 
 # Application definition
 INSTALLED_APPS = [

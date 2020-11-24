@@ -18,10 +18,11 @@ services:
       DATABASE_PASSWORD: insecure
       PARKEERVAKKEN_OS_PASSWORD:
       ENVIRONMENT: test
-      PYTHONBREAKPOINT: ipdb.set_trace
+      PYTHONBREAKPOINT: 
       PYTHONDONTWRITEBYTECODE: 1
+      AUTHORIZATION_TOKEN: insecure
       HOME: /tmp
     volumes:
       - ./run_tests.sh:/app/run_tests.sh
-      # - ../../src:/app
+      - ../../src:/app:ro
     command: /app/run_tests.sh

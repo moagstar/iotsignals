@@ -23,6 +23,8 @@ USER datapunt
 
 RUN export DJANGO_SETTINGS_MODULE=containers.settings
 
+ARG SECRET_KEY=dev
+ARG AUTHORIZATION_TOKEN=dev
 RUN python manage.py collectstatic --no-input
 
 CMD uwsgi

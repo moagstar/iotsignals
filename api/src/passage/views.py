@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from contrib.rest_framework.authentication import SimpleTokenAuthentication
 from datapunt_api.pagination import HALCursorPagination
 from datapunt_api.rest import DatapuntViewSetWritable
 from django.db.models import DateTimeField, ExpressionWrapper, F, Sum
@@ -11,6 +12,7 @@ from passage.case_converters import to_snakecase
 from passage.expressions import HoursInterval
 from rest_framework import exceptions, generics, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from writers import CSVExport
 
@@ -100,7 +102,13 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return csv_export.export("export", qs.iterator(), streaming=True)
 
-    @action(methods=['get'], detail=False, url_path='export')
+    @action(
+        methods=['get'],
+        detail=False,
+        url_path='export',
+        authentication_classes=[SimpleTokenAuthentication],
+        permission_classes=[IsAuthenticated],
+    )
     def export(self, request, *args, **kwargs):
         # 1. Get the iterator of the QuerySet
         previous_week = timezone.now() - timedelta(weeks=1)

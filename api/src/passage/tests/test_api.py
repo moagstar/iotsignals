@@ -6,10 +6,12 @@ from random import randint
 from unittest import mock
 
 from django.db import connection
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from model_bakery import baker
 from model_bakery.recipe import seq
 from passage.case_converters import to_camelcase
+from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .factories import PassageFactory
@@ -190,6 +192,19 @@ class PassageAPITestV0(APITestCase):
         lines = [line for line in response.streaming_content]
         assert lines == [b'datum,aantal_taxi_passages\r\n', f'{date},1000\r\n'.encode()]
 
+    @override_settings(AUTHORIZATION_TOKEN='foo')
+    def test_passage_export_no_auth(self):
+        url = reverse('v0:passage-export')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(AUTHORIZATION_TOKEN='foo')
+    def test_passage_export_wrong_auth(self):
+        url = reverse('v0:passage-export')
+        response = self.client.get(url, HTTP_AUTHORIZATION='Token bar')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(AUTHORIZATION_TOKEN='foo')
     def test_passage_export_no_filters(self):
 
         reading_count = 4
@@ -227,7 +242,7 @@ class PassageAPITestV0(APITestCase):
 
         # first post a record
         url = reverse('v0:passage-export')
-        response = self.client.get(url)
+        response = self.client.get(url, HTTP_AUTHORIZATION='Token foo')
         self.assertEqual(response.status_code, 200)
 
         lines = [line.decode() for line in response.streaming_content]
@@ -256,6 +271,7 @@ class PassageAPITestV0(APITestCase):
         expected_content = set(map(tuple, expected_content))
         assert set(expected_content) == set(content)
 
+    @override_settings(AUTHORIZATION_TOKEN='foo')
     def test_passage_export_filters(self):
         date = datetime.fromisocalendar(2019, 11, 1)
         # create data for 3 cameras
@@ -270,19 +286,25 @@ class PassageAPITestV0(APITestCase):
             _quantity=100,
         )
         url = reverse('v0:passage-export')
-        response = self.client.get(url, dict(year=2019, week=12))
+        response = self.client.get(
+            url, dict(year=2019, week=12), HTTP_AUTHORIZATION='Token foo'
+        )
         self.assertEqual(response.status_code, 200)
         lines = [x for x in response.streaming_content]
         assert len(lines) == 0
 
-        response = self.client.get(url, dict(year=2019, week=11))
+        response = self.client.get(
+            url, dict(year=2019, week=11), HTTP_AUTHORIZATION='Token foo'
+        )
         self.assertEqual(response.status_code, 200)
         lines = [x for x in response.streaming_content]
 
         # Expect the header and 3 lines
         assert len(lines) == 4
 
-        response = self.client.get(url, dict(year=2019))
+        response = self.client.get(
+            url, dict(year=2019), HTTP_AUTHORIZATION='Token foo'
+        )
         self.assertEqual(response.status_code, 200)
         lines = [x for x in response.streaming_content]
 

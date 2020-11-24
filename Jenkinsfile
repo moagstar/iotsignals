@@ -31,8 +31,6 @@ node {
         tryStep "build", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
                 def api = docker.build("datapunt/iotsignals:${env.BUILD_NUMBER}", "api")
-                api.push()
-                api.push("acceptance")
             }
         }
     }

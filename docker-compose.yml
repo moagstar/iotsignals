@@ -33,6 +33,7 @@ services:
       - UWSGI_MODULE=iotsignals.wsgi:application
       - UWSGI_PY_AUTORELOAD=1
       - UWSGI_HTTP_AUTO_GZIP=1
+      - AUTHORIZATION_TOKEN=insecure
       - PYTHONBREAKPOINT
       - PYTHONDONTWRITEBYTECODE=1
       - HOME=/tmp
