@@ -10,9 +10,8 @@ dc() {
 	docker-compose -p iotsignalstest -f ${DIR}/docker-compose.yml $*
 }
 
-dc stop
-dc rm --force
-dc down
+
+dc down -v
 dc pull
 dc build
 
