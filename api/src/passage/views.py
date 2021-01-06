@@ -111,7 +111,7 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     )
     def export(self, request, *args, **kwargs):
         # 1. Get the iterator of the QuerySet
-        previous_week = timezone.now() - timedelta(weeks=1)
+        previous_week = timezone.now() - timedelta(days=timezone.now().weekday(), weeks=1)
         year = previous_week.year
         week = previous_week.isocalendar()[1]
 
@@ -121,8 +121,12 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         qs = Filter(request.GET).qs
 
         # If no date has been given, we return the data of last week
+        # Since the last week of the year can contain days of both years
+        # we will search in both years.
         if not request.GET.get('year') and not request.GET.get('week'):
-            qs = qs.filter(year=year, week=week)
+            monday = previous_week
+            sunday = monday + timedelta(days=6)
+            qs = qs.filter(date__gte=monday, date__lte=sunday)
 
         qs = (
             qs.annotate(
