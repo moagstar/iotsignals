@@ -63,13 +63,9 @@ node {
         }
 
         stage('Waiting for approval') {                                                                                                                                                 
-          options {                                                                                                                                                                     
-            timeout(time: 6, unit: 'HOURS')                                                                                                                                             
-          }                                                                                                                                                                             
-          input {                                                                                                                                                                       
-            message "Deploy to Production?"                                                                                                                                             
-            ok "Yes, deploy it!"
-          }
+            timeout(time: 6, unit: 'HOURS') {
+                input "Deploy to Production?"
+            }
         }
 
         stage('Push production image') {
