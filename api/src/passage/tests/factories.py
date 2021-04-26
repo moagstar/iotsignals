@@ -47,7 +47,7 @@ class PassageFactory(DjangoModelFactory):
     kenteken_nummer_betrouwbaarheid = fuzzy.FuzzyInteger(1, 1000)
     kenteken_land_betrouwbaarheid = fuzzy.FuzzyInteger(1.0, 1000.0, 1)
     kenteken_karakters_betrouwbaarheid = kenteken_karakter_betrouwbaarheid()
-    indicatie_snelheid = fuzzy.FuzzyDecimal(0, 500)
+    indicatie_snelheid = fuzzy.FuzzyFloat(0, 500)
     automatisch_verwerkbaar = factory.Faker('boolean', chance_of_getting_true=50)
     voertuig_soort = random.choice(['Personenauto', 'Bromfiets', 'Bedrijfsauto', 'Bus'])
     merk = factory.Faker('first_name')

@@ -9,6 +9,8 @@
 pip-tools
 
 # Useful extra developer packages:
+pytest
+pytest-django
 factory-boy
 locust
 ipdb

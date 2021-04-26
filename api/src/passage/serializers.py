@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 
 from datapunt_api.rest import DisplayField, HALSerializer
 from django.db import IntegrityError
@@ -28,7 +29,9 @@ class PassageSerializer(HALSerializer):
 
 
 class PassageDetailSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(validators=[])  # Disable the validators for the id, which improves performance (rps) by over 200%
+    id = serializers.UUIDField(
+        validators=[]
+    )  # Disable the validators for the id, which improves performance (rps) by over 200%
 
     class Meta:
         model = Passage
@@ -40,3 +43,26 @@ class PassageDetailSerializer(serializers.ModelSerializer):
         except IntegrityError as e:
             log.info(f"DuplicateIdError for id {validated_data['id']}")
             raise DuplicateIdError(str(e))
+
+    def validate_datum_eerste_toelating(self, value):
+        return date(year=value.year, month=1, day=1)
+
+    def validate_datum_tenaamstelling(self, value):
+        return None
+
+    def validate_toegestane_maximum_massa_voertuig(self, value):
+        if value <= 3500:
+            return 1500
+        return value
+
+    def validate(self, data):
+        if 'toegestane_maximum_massa_voertuig' in data:
+            if data['toegestane_maximum_massa_voertuig'] <= 3500:
+                data['europese_voertuigcategorie_toevoeging'] = None
+                data['merk'] = None
+
+        if 'voertuig_soort' in data:
+            if data['voertuig_soort'].lower() == 'personenauto':
+                data['inrichting'] = 'Personenauto'
+
+        return data

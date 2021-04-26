@@ -25,4 +25,5 @@ services:
     volumes:
       - ./run_tests.sh:/app/run_tests.sh
       - ../../src:/app:ro
-    command: /app/run_tests.sh
+    entrypoint: /deploy/docker-wait.sh
+    command: pytest
