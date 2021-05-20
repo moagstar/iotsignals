@@ -80,6 +80,7 @@ DATABASES = {
     },
 }
 
+SHELL_PLUS_PRINT_SQL_TRUNCATE = 10000
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -96,6 +97,7 @@ USE_L10N = True
 
 STATIC_URL = '/iotsignals/static/'
 STATIC_ROOT = '/static/'
+
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 if SENTRY_DSN:

@@ -68,6 +68,8 @@ class Passage(models.Model):
     # Zie ook: https://www.tno.nl/media/2451/lowres_tno_versit.pdf
     versit_klasse = models.CharField(null=True, max_length=255)
 
+    privacy_check = models.BooleanField(default=False, db_index=True)
+
 
 class PassageHourAggregation(models.Model):
     date = models.DateField()
