@@ -54,4 +54,4 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Finished'))
 
     def get_batch(self, size):
-        return Passage.objects.filter(privacy_check=None).values('pk')[0:size]
+        return Passage.objects.exclude(privacy_check=True).values('pk')[0:size]
