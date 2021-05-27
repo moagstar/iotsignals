@@ -20,12 +20,17 @@ class Command(BaseCommand):
 
         sleep = options['sleep']
 
-        dates = Passage.objects.all().aggregate(
+        dates = Passage.objects.filter(privacy_check=False).aggregate(
             min=TruncDay(Min('passage_at')), max=TruncDay(Max('passage_at'))
         )
 
-        date_min = dates['min'] - timedelta(days=1)
-        date_max = dates['max'] + timedelta(days=1)
+        print(dates)
+        if not dates['min']:
+            self.stdout.write('No data to be processed')
+            return
+
+        date_min = dates['min']
+        date_max = dates['max'] + timedelta(days=2)
 
         for date in (
             date_min + timedelta(n)
