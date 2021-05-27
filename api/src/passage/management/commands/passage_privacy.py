@@ -24,9 +24,12 @@ class Command(BaseCommand):
             min=TruncDay(Min('passage_at')), max=TruncDay(Max('passage_at'))
         )
 
+        date_min = dates['min'] - timedelta(days=1)
+        date_max = dates['max'] + timedelta(days=1)
+
         for date in (
-            dates['min'] + timedelta(n)
-            for n in range((dates['max'] - dates['min']).days)
+            date_min + timedelta(n)
+            for n in range((date_max - date_min).days)
         ):
             self.stdout.write(f"Selecting data in: {self.style.SQL_KEYWORD(date)}")
             num_updated_rows = Passage.objects.filter(
@@ -56,8 +59,8 @@ class Command(BaseCommand):
                 ),
                 privacy_check=True,
             )
-            self.stdout.write('Processed: ' + self.style.SUCCESS(num_updated_rows))
-            self.stdout.write('sleeping for: ' + self.style.SUCCESS(sleep))
+            self.stdout.write(f'Processed: {self.style.SUCCESS(num_updated_rows)}')
+            self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
             time.sleep(sleep)
 
         self.stdout.write(self.style.SUCCESS('Finished'))
