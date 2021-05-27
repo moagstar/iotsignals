@@ -1,10 +1,10 @@
 import logging
 import time
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
-from django.db.models import Case, F, Value, When
-from django.db.models.functions import Greatest, TruncYear
-from django.forms import model_to_dict
+from django.db.models import Case, F, Max, Min, Value, When
+from django.db.models.functions import TruncDay, TruncYear
 from passage.models import Passage
 
 logger = logging.getLogger(__name__)
@@ -12,18 +12,27 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('--batch-size', nargs='?', default=1000, type=int)
         parser.add_argument('--sleep', nargs='?', default=1, type=int)
 
     def handle(self, **options):
         verbosity = int(options['verbosity'])
         logger.info("message")
 
-        batch_size = options['batch_size']
         sleep = options['sleep']
 
-        while batch := self.get_batch(batch_size):
-            qs = Passage.objects.filter(pk__in=batch).update(
+        dates = Passage.objects.all().aggregate(
+            min=TruncDay(Min('passage_at')), max=TruncDay(Max('passage_at'))
+        )
+
+        for date in (
+            dates['min'] + timedelta(n)
+            for n in range((dates['max'] - dates['min']).days)
+        ):
+            self.stdout.write(f"Selecting data in: {self.style.SQL_KEYWORD(date)}")
+            num_updated_rows = Passage.objects.filter(
+                passage_at__gte=date,
+                passage_at__lt=date + timedelta(days=1),
+            ).exclude(privacy_check=True).update(
                 datum_eerste_toelating=TruncYear('datum_eerste_toelating'),
                 datum_tenaamstelling=Value(None),
                 toegestane_maximum_massa_voertuig=Case(
@@ -45,13 +54,10 @@ class Command(BaseCommand):
                     When(toegestane_maximum_massa_voertuig__lte=3500, then=Value(None)),
                     default=F('merk'),
                 ),
-                privacy_check=True
+                privacy_check=True,
             )
-            self.stdout.write('Processed: ' + self.style.SUCCESS(qs))
+            self.stdout.write('Processed: ' + self.style.SUCCESS(num_updated_rows))
             self.stdout.write('sleeping for: ' + self.style.SUCCESS(sleep))
             time.sleep(sleep)
 
         self.stdout.write(self.style.SUCCESS('Finished'))
-
-    def get_batch(self, size):
-        return Passage.objects.exclude(privacy_check=True).values('pk')[0:size]
