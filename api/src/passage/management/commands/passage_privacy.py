@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
         sleep = options['sleep']
 
-        dates = Passage.objects.filter(privacy_check=False).aggregate(
+        dates = Passage.objects.aggregate(
             min=TruncDay(Min('passage_at')), max=TruncDay(Max('passage_at'))
         )
 
@@ -65,7 +65,12 @@ class Command(BaseCommand):
                 privacy_check=True,
             )
             self.stdout.write(f'Processed: {self.style.SUCCESS(num_updated_rows)}')
-            self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
-            time.sleep(sleep)
+
+            if num_updated_rows > 0:
+                self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
+                time.sleep(sleep)
+            else:
+                self.stdout.write(f'sleeping for: {self.style.SUCCESS(0.1)}')
+                time.sleep(0.1)
 
         self.stdout.write(self.style.SUCCESS('Finished'))
