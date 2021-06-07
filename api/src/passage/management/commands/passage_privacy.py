@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Case, F, Max, Min, Value, When
 from django.db.models.functions import TruncDay, TruncYear
+from django.db.utils import ProgrammingError
 from passage.models import Passage
 
 logger = logging.getLogger(__name__)
@@ -75,8 +76,11 @@ class Command(BaseCommand):
             partition_name = f'passage_passage_{date:%Y%m%d}'
             vacuum_query = f'VACUUM FULL ANALYZE {partition_name}'
             self.stdout.write(f'Starting vacuum: {vacuum_query}')
-            with connection.cursor() as cursor:
-                cursor.execute(vacuum_query)
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(vacuum_query)
+            except ProgrammingError as e:
+                self.stderr.write(f'Error vacuuming: {e}')
             self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
             time.sleep(sleep)
 
