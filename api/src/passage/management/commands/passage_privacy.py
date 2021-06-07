@@ -3,6 +3,7 @@ import time
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.db.models import Case, F, Max, Min, Value, When
 from django.db.models.functions import TruncDay, TruncYear
 from passage.models import Passage
@@ -74,7 +75,8 @@ class Command(BaseCommand):
             partition_name = f'passage_passage_{date:%Y%m%d}'
             vacuum_query = f'VACUUM FULL ANALYZE {partition_name}'
             self.stdout.write(f'Starting vacuum: {vacuum_query}')
-            Passage.objects.raw(vacuum_query)
+            with connection.cursor() as cursor:
+                cursor.execute(vacuum_query)
             self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
             time.sleep(sleep)
 
