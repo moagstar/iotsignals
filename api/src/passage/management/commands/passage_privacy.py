@@ -29,7 +29,7 @@ class Command(BaseCommand):
             self.stdout.write('No data to be processed')
             return
 
-        date_min = dates['min']
+        date_min = dates['min'] + timedelta(days=1)
         date_max = dates['max'] + timedelta(days=2)
 
         for date in (
@@ -70,5 +70,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'sleeping for: {self.style.SUCCESS(0.1)}')
                 time.sleep(0.1)
+
+            partition_name = f'passage_passage_{date:%Y%m%d}'
+            vacuum_query = f'VACUUM FULL ANALYZE {partition_name}'
+            self.stdout.write(f'Starting vacuum: {vacuum_query}')
+            Passage.objects.raw(vacuum_query)
+            self.stdout.write(f'sleeping for: {self.style.SUCCESS(sleep)}')
+            time.sleep(sleep)
 
         self.stdout.write(self.style.SUCCESS('Finished'))
