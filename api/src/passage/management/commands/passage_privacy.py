@@ -33,14 +33,13 @@ class Command(BaseCommand):
         date_max = dates['max'] + timedelta(days=2)
 
         for date in (
-            date_min + timedelta(n)
-            for n in range((date_max - date_min).days)
+            date_min + timedelta(n) for n in range((date_max - date_min).days)
         ):
             self.stdout.write(f"Selecting data in: {self.style.SQL_KEYWORD(date)}")
             num_updated_rows = Passage.objects.filter(
                 passage_at__gte=date,
                 passage_at__lt=date + timedelta(days=1),
-            ).exclude(privacy_check=True).update(
+            ).update(
                 datum_eerste_toelating=TruncYear('datum_eerste_toelating'),
                 datum_tenaamstelling=Value(None),
                 toegestane_maximum_massa_voertuig=Case(
@@ -62,7 +61,6 @@ class Command(BaseCommand):
                     When(toegestane_maximum_massa_voertuig__lte=3500, then=Value(None)),
                     default=F('merk'),
                 ),
-                privacy_check=True,
             )
             self.stdout.write(f'Processed: {self.style.SUCCESS(num_updated_rows)}')
 

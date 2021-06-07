@@ -1,9 +1,8 @@
-from django.db import models
-from django.contrib.postgres.fields import JSONField
-from django.contrib.gis.db.models import PointField
-from django.core.validators import MaxValueValidator, MinValueValidator
-
 from datetimeutc.fields import DateTimeUTCField
+from django.contrib.gis.db.models import PointField
+from django.contrib.postgres.fields import JSONField
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 
 class Passage(models.Model):
@@ -16,8 +15,7 @@ class Passage(models.Model):
 
     id = models.UUIDField(primary_key=True, unique=True)
     passage_at = DateTimeUTCField(db_index=True, null=False)
-    created_at = DateTimeUTCField(
-        db_index=True, auto_now_add=True, editable=False)
+    created_at = DateTimeUTCField(db_index=True, auto_now_add=True, editable=False)
 
     version = models.CharField(max_length=20)
 
@@ -32,14 +30,12 @@ class Passage(models.Model):
 
     # car properties
     kenteken_land = models.CharField(max_length=2)
-    kenteken_nummer_betrouwbaarheid = models.SmallIntegerField(validators=[
-        MaxValueValidator(1000),
-        MinValueValidator(0)
-    ])
-    kenteken_land_betrouwbaarheid = models.SmallIntegerField(validators=[
-        MaxValueValidator(1000),
-        MinValueValidator(0)
-    ])
+    kenteken_nummer_betrouwbaarheid = models.SmallIntegerField(
+        validators=[MaxValueValidator(1000), MinValueValidator(0)]
+    )
+    kenteken_land_betrouwbaarheid = models.SmallIntegerField(
+        validators=[MaxValueValidator(1000), MinValueValidator(0)]
+    )
     kenteken_karakters_betrouwbaarheid = JSONField(null=True)
     indicatie_snelheid = models.FloatField(null=True)
     automatisch_verwerkbaar = models.NullBooleanField()
@@ -50,12 +46,9 @@ class Passage(models.Model):
     datum_tenaamstelling = models.DateField(null=True)
     toegestane_maximum_massa_voertuig = models.IntegerField(null=True)
     europese_voertuigcategorie = models.CharField(max_length=2, null=True)
-    europese_voertuigcategorie_toevoeging = models.CharField(
-        max_length=1, null=True)
+    europese_voertuigcategorie_toevoeging = models.CharField(max_length=1, null=True)
     taxi_indicator = models.NullBooleanField()
-    maximale_constructie_snelheid_bromsnorfiets = models.SmallIntegerField(
-        null=True
-    )
+    maximale_constructie_snelheid_bromsnorfiets = models.SmallIntegerField(null=True)
 
     # fuel properties
     brandstoffen = JSONField(null=True)
@@ -67,8 +60,6 @@ class Passage(models.Model):
     # TNO Versit klasse.
     # Zie ook: https://www.tno.nl/media/2451/lowres_tno_versit.pdf
     versit_klasse = models.CharField(null=True, max_length=255)
-
-    privacy_check = models.BooleanField(null=True, db_index=True)
 
 
 class PassageHourAggregation(models.Model):
