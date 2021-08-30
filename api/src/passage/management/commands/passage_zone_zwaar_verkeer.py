@@ -105,22 +105,7 @@ class Command(BaseCommand):
         
         group by
         
-        date_trunc('hour', p.passage_at),
-        date(p.passage_at),
-        extract(YEAR FROM p.passage_at)::int,
-        extract(MONTH FROM p.passage_at)::int,
-        extract(DAY FROM p.passage_at)::int,
-        extract(WEEK FROM p.passage_at)::int,
-        CASE
-            WHEN extract(DOW FROM p.passage_at)::int = 0 then '7 zondag'
-            WHEN extract(DOW FROM p.passage_at)::int = 1 then '1 maandag'
-            WHEN extract(DOW FROM p.passage_at)::int = 2 then '2 dinsdag'
-            WHEN extract(DOW FROM p.passage_at)::int = 3 then '3 woendsag'
-            WHEN extract(DOW FROM p.passage_at)::int = 4 then '4 donderdag'
-            WHEN extract(DOW FROM p.passage_at)::int = 5 then '5 vrijdag'
-            WHEN extract(DOW FROM p.passage_at)::int = 6 then '6 zaterdag'
-        ELSE 'onbekend ' END,
-        extract(HOUR FROM p.passage_at)::int,
+        p.passage_at,
         --  blok camera informatie
         h.order_kaart,
         h.order_naam,
@@ -130,17 +115,10 @@ class Command(BaseCommand):
         h.location,
         h.azimuth,
         --  blok voertuig informatie
-        CASE WHEN p.kenteken_land = 'NL'then 'NL' ELSE 'buitenland' END,
+        p.inrichting,
+        p.kenteken_land,
         p.voertuig_soort,
-        CASE 	WHEN p.voertuig_soort = 'Personenauto' then 'Personenauto' ELSE inrichting END,
-        CASE	WHEN p.kenteken_land <> 'NL'						   then 'buitenland'
-                WHEN p.toegestane_maximum_massa_voertuig <=  3500 then 'klasse 0 <= 3500'
-                WHEN p.toegestane_maximum_massa_voertuig <=  7500 then 'klasse 1 <= 7500'
-                WHEN p.toegestane_maximum_massa_voertuig <= 11250 then 'klasse 2 <= 11250'
-                WHEN p.toegestane_maximum_massa_voertuig <= 30000 then 'klasse 3 <= 30000'
-                WHEN p.toegestane_maximum_massa_voertuig <= 50000 then 'klasse 4 <= 50000'
-                WHEN p.toegestane_maximum_massa_voertuig > 50000 then 'klasse 5 > 50000'
-                ELSE 'onbekend' END;
+        p.toegestane_maximum_massa_voertuig;
         """
 
     def _run_query_from_date(self, run_date):
