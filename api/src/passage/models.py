@@ -99,13 +99,13 @@ class ZwaarVerkeerHelperTable(models.Model):
 
 
 class ZoneZwaarVerkeer(models.Model):
-    passage_at_timestamp = models.IntegerField()
+    passage_at_timestamp = DateTimeUTCField()
     passage_at_date = models.DateField()
     passage_at_year = models.IntegerField()
     passage_at_month = models.IntegerField()
     passage_at_day = models.IntegerField()
     passage_at_week = models.IntegerField()
-    passage_at_day_of_week = models.IntegerField()  # day of week
+    passage_at_day_of_week = models.CharField(max_length=20)  # day of week
     passage_at_hour = models.IntegerField()
 
     order_kaart = models.IntegerField(null=True, blank=True)  # in sheet: volgorde
