@@ -16,6 +16,7 @@ services:
       DATABASE_NAME: iotsignals
       DATABASE_USER: iotsignals
       DATABASE_PASSWORD: insecure
+      DATABASE_HOST: database
       PARKEERVAKKEN_OS_PASSWORD:
       ENVIRONMENT: test
       PYTHONBREAKPOINT: 

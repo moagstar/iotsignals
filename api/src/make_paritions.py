@@ -26,7 +26,6 @@ except Exception as e:
     print(e)
     log.error(e)
     log.error("Database connection Failed!")
-    log.error(dbparam)
     exit(-1)
 
 
