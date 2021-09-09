@@ -105,7 +105,22 @@ class Command(BaseCommand):
         
         group by
         
-        p.passage_at,
+        date_trunc('hour', p.passage_at),
+        date(p.passage_at),
+        extract(YEAR FROM p.passage_at),
+        extract(MONTH FROM p.passage_at),
+        extract(DAY FROM p.passage_at),
+        extract(WEEK FROM p.passage_at),
+        CASE
+            WHEN extract(DOW FROM p.passage_at)::int = 0 then '7 zondag'
+            WHEN extract(DOW FROM p.passage_at)::int = 1 then '1 maandag'
+            WHEN extract(DOW FROM p.passage_at)::int = 2 then '2 dinsdag'
+            WHEN extract(DOW FROM p.passage_at)::int = 3 then '3 woendsag'
+            WHEN extract(DOW FROM p.passage_at)::int = 4 then '4 donderdag'
+            WHEN extract(DOW FROM p.passage_at)::int = 5 then '5 vrijdag'
+            WHEN extract(DOW FROM p.passage_at)::int = 6 then '6 zaterdag'
+        ELSE 'onbekend ' END,
+        extract(HOUR FROM p.passage_at),
         --  blok camera informatie
         h.order_kaart,
         h.order_naam,
