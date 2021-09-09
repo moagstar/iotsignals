@@ -78,7 +78,7 @@ class Command(BaseCommand):
         h.geom,
         h.azimuth,
         --  blok voertuig informatie
-        CASE WHEN p.kenteken_land = 'NL'then 'NL' ELSE 'buitenland' END AS kenteken_land,
+        CASE WHEN p.kenteken_land = 'NL' then 'NL' ELSE 'buitenland' END AS kenteken_land,
         p.voertuig_soort AS voertuig_soort,
         CASE 	WHEN p.voertuig_soort = 'Personenauto' then 'Personenauto' ELSE inrichting END AS inrichting,
         CASE	WHEN p.kenteken_land <> 'NL'						   then 'buitenland'
