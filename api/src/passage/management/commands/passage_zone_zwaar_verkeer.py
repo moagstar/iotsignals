@@ -139,16 +139,14 @@ class Command(BaseCommand):
     def _run_query_from_date(self, run_date):
         log.info(f"Delete previously made aggregations for date {run_date}")
         delete_query = self._get_delete_query(run_date)
-        log.info(f"Run the following query:")
-        log.info(delete_query)
+        log.info(f"Run the following query: {delete_query}")
         with connection.cursor() as cursor:
             cursor.execute(delete_query)
             log.info(f"Deleted {cursor.rowcount} records")
 
         log.info(f"Run aggregation for date {run_date}")
         aggregation_query = self._get_aggregation_query(run_date)
-        log.info(f"Run the following query:")
-        log.info(aggregation_query)
+        log.info(f"Run the following query: {aggregation_query}")
         with connection.cursor() as cursor:
             cursor.execute(aggregation_query)
             log.info(f"Inserted {cursor.rowcount} records")
