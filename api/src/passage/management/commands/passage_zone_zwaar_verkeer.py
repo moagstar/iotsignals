@@ -130,10 +130,17 @@ class Command(BaseCommand):
         h.location,
         h.azimuth,
         --  blok voertuig informatie
-        p.inrichting,
-        p.kenteken_land,
+        CASE WHEN p.kenteken_land = 'NL' then 'NL' ELSE 'buitenland' END,
         p.voertuig_soort,
-        p.toegestane_maximum_massa_voertuig;
+        CASE 	WHEN p.voertuig_soort = 'Personenauto' then 'Personenauto' ELSE inrichting END,
+        CASE	WHEN p.kenteken_land <> 'NL' then 'buitenland'
+                WHEN p.toegestane_maximum_massa_voertuig <=  3500 then 'klasse 0 <= 3500'
+                WHEN p.toegestane_maximum_massa_voertuig <=  7500 then 'klasse 1 <= 7500'
+                WHEN p.toegestane_maximum_massa_voertuig <= 11250 then 'klasse 2 <= 11250'
+                WHEN p.toegestane_maximum_massa_voertuig <= 30000 then 'klasse 3 <= 30000'
+                WHEN p.toegestane_maximum_massa_voertuig <= 50000 then 'klasse 4 <= 50000'
+                WHEN p.toegestane_maximum_massa_voertuig > 50000 then 'klasse 5 > 50000'
+                ELSE 'onbekend'	END
         """
 
     def _run_query_from_date(self, run_date):
