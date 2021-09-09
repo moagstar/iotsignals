@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     def _get_delete_query(self, run_date):
         return f""" 
-        DELETE FROM passage_zonezwaarverkeer
+        DELETE FROM passage_heavytraffichouraggregation
         WHERE passage_at_year = {run_date.year}
         AND passage_at_month = {run_date.month}
         AND passage_at_day = {run_date.day}
@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
     def _get_aggregation_query(self, run_date):
         return f"""
-        INSERT INTO passage_zonezwaarverkeer (
+        INSERT INTO passage_heavytraffichouraggregation (
             passage_at_timestamp,
             passage_at_date,
             passage_at_year,
@@ -94,7 +94,7 @@ class Command(BaseCommand):
         
         
         from passage_passage AS p
-        left join	passage_zwaarverkeerhelpertable AS h
+        left join	passage_camera AS h
         on			p.camera_naam = h.camera_naam AND
                     p.camera_kijkrichting = h.camera_kijkrichting AND
                     p.rijrichting = h.rijrichting

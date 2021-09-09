@@ -84,7 +84,7 @@ class PassageHourAggregation(models.Model):
     count = models.IntegerField()
 
 
-class ZwaarVerkeerHelperTable(models.Model):
+class Camera(models.Model):
     camera_naam = models.CharField(max_length=255, db_index=True)
     rijrichting = models.IntegerField(null=True, blank=True, db_index=True)
     camera_kijkrichting = models.FloatField(null=True, blank=True, db_index=True)
@@ -98,7 +98,7 @@ class ZwaarVerkeerHelperTable(models.Model):
     azimuth = models.FloatField(null=True, blank=True)
 
 
-class ZoneZwaarVerkeer(models.Model):
+class HeavyTrafficHourAggregation(models.Model):
     passage_at_timestamp = DateTimeUTCField()
     passage_at_date = models.DateField()
     passage_at_year = models.IntegerField()

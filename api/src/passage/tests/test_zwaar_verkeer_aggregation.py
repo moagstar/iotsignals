@@ -5,7 +5,7 @@ import time_machine
 from django.core.management import call_command
 from django.utils import timezone
 
-from passage.models import ZoneZwaarVerkeer, ZwaarVerkeerHelperTable
+from passage.models import Camera, HeavyTrafficHourAggregation
 from passage.tests.factories import PassageFactory
 
 
@@ -56,7 +56,7 @@ class TestZwaarVerkeerAggregation:
         # required to ensure partitions exist
         import make_paritions
 
-        helper_table_row = ZwaarVerkeerHelperTable.objects.filter(
+        helper_table_row = Camera.objects.filter(
             cordon__in=['S100', 'A10']
         ).first()
 
@@ -89,7 +89,7 @@ class TestZwaarVerkeerAggregation:
                 rijrichting=helper_table_row.rijrichting,
             )
 
-        assert ZoneZwaarVerkeer.objects.count() == 0
+        assert HeavyTrafficHourAggregation.objects.count() == 0
         call_command(
             'passage_zone_zwaar_verkeer',
             from_date=yesterday.date(),
@@ -108,11 +108,11 @@ class TestZwaarVerkeerAggregation:
         expected_hour = yesterday.hour
 
         # (implicitly) assert there is one result for today by using get
-        result = ZoneZwaarVerkeer.objects.filter(
+        result = HeavyTrafficHourAggregation.objects.filter(
             passage_at_timestamp=expected_timestamp
         ).get()
         for day in other_days:
-            assert ZoneZwaarVerkeer.objects.filter(
+            assert HeavyTrafficHourAggregation.objects.filter(
                 passage_at_timestamp=day.replace(minute=0, second=0, microsecond=0)
             ).exists()
 
