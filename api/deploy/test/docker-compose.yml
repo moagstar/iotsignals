@@ -11,11 +11,12 @@ services:
   tests:
     build: ../../
     links:
-      - database:iotsignals_db
+      - database
     environment:
       DATABASE_NAME: iotsignals
       DATABASE_USER: iotsignals
       DATABASE_PASSWORD: insecure
+      DATABASE_HOST: database
       PARKEERVAKKEN_OS_PASSWORD:
       ENVIRONMENT: test
       PYTHONBREAKPOINT: 

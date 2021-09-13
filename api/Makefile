@@ -7,7 +7,7 @@ PYTHON = python3
 
 dc = docker-compose
 run = $(dc) run --rm
-manage = $(run) api python manage.py
+manage = $(run) dev python manage.py
 
 help:                               ## Show this help.
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
@@ -32,4 +32,19 @@ push: build                         ## Push docker image to registry
 	$(dc) push
 
 test:
-	cd deploy/test; $(run) tests pytest $(ARGS)
+	$(run) dev pytest $(ARGS)
+
+pdb:
+	$(run) dev pytest --pdb $(ARGS)
+
+bash:
+	$(run) dev bash
+
+shell:
+	$(manage) shell_plus
+
+migrate:
+	$(manage) migrate
+
+migrations:
+	$(manage) makemigrations

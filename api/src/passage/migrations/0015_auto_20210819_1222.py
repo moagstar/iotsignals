@@ -39,4 +39,4 @@ class Migration(migrations.Migration):
         ('passage', '0014_zonezwaarverkeer_zwaarverkeerhelpertable'),
     ]
 
-    operations = [migrations.RunPython(import_helper_table)]
+    operations = [migrations.RunPython(import_helper_table, migrations.RunPython.noop)]

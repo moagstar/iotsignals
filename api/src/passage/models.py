@@ -84,7 +84,7 @@ class PassageHourAggregation(models.Model):
     count = models.IntegerField()
 
 
-class ZwaarVerkeerHelperTable(models.Model):
+class Camera(models.Model):
     camera_naam = models.CharField(max_length=255, db_index=True)
     rijrichting = models.IntegerField(null=True, blank=True, db_index=True)
     camera_kijkrichting = models.FloatField(null=True, blank=True, db_index=True)
@@ -98,14 +98,14 @@ class ZwaarVerkeerHelperTable(models.Model):
     azimuth = models.FloatField(null=True, blank=True)
 
 
-class ZoneZwaarVerkeer(models.Model):
-    passage_at_timestamp = models.IntegerField()
+class HeavyTrafficHourAggregation(models.Model):
+    passage_at_timestamp = DateTimeUTCField()
     passage_at_date = models.DateField()
     passage_at_year = models.IntegerField()
     passage_at_month = models.IntegerField()
     passage_at_day = models.IntegerField()
     passage_at_week = models.IntegerField()
-    passage_at_day_of_week = models.IntegerField()  # day of week
+    passage_at_day_of_week = models.CharField(max_length=20)  # day of week
     passage_at_hour = models.IntegerField()
 
     order_kaart = models.IntegerField(null=True, blank=True)  # in sheet: volgorde
