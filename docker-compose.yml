@@ -37,8 +37,8 @@ services:
       - PYTHONBREAKPOINT
       - PYTHONDONTWRITEBYTECODE=1
       - HOME=/tmp
-    command:
-      uwsgi
+    entrypoint: /deploy/docker-wait.sh
+    command: uwsgi
 
   dev:
     <<: *api
