@@ -13,7 +13,7 @@ class Command(BaseCommand):
         # Named (optional) argument
         parser.add_argument(
             '--from-date',
-            type=date,
+            type=datetime.date.fromisoformat,
             help='Run the aggregations from this date',
         )
 
