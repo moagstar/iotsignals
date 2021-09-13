@@ -91,7 +91,7 @@ class TestZwaarVerkeerAggregation:
 
         assert HeavyTrafficHourAggregation.objects.count() == 0
         call_command(
-            'passage_zone_zwaar_verkeer',
+            'passage_zwaar_verkeer_hour_aggregation',
             from_date=yesterday.date(),
         )
 
