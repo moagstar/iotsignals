@@ -1,8 +1,7 @@
 from datetimeutc.fields import DateTimeUTCField
-from django.contrib.gis.db.models import PointField
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.contrib.gis.db import models
 
 
 class Passage(models.Model):
@@ -26,7 +25,7 @@ class Passage(models.Model):
     camera_id = models.CharField(max_length=255)
     camera_naam = models.CharField(max_length=255)
     camera_kijkrichting = models.FloatField()
-    camera_locatie = PointField(srid=4326)
+    camera_locatie = models.PointField(srid=4326)
 
     # car properties
     kenteken_land = models.CharField(max_length=2)
@@ -83,3 +82,42 @@ class PassageHourAggregation(models.Model):
     electric = models.IntegerField(null=True)
     toegestane_maximum_massa_voertuig = models.TextField()
     count = models.IntegerField()
+
+
+class ZwaarVerkeerHelperTable(models.Model):
+    camera_naam = models.CharField(max_length=255, db_index=True)
+    rijrichting = models.IntegerField(null=True, blank=True, db_index=True)
+    camera_kijkrichting = models.FloatField(null=True, blank=True, db_index=True)
+
+    order_kaart = models.IntegerField(null=True, blank=True)     # in sheet: volgorde
+    order_naam = models.CharField(max_length=255, null=True, blank=True)      # in sheet: straatnaam
+    cordon = models.CharField(max_length=255, db_index=True, null=True, blank=True)
+    richting = models.CharField(max_length=10, null=True, blank=True)
+    location = models.PointField(srid=4326, null=True, blank=True)
+    geom = models.CharField(max_length=255, null=True, blank=True)
+    azimuth = models.FloatField(null=True, blank=True)
+
+
+class ZoneZwaarVerkeer(models.Model):
+    passage_at_timestamp = models.IntegerField()
+    passage_at_date = models.DateField()
+    passage_at_year = models.IntegerField()
+    passage_at_month = models.IntegerField()
+    passage_at_day = models.IntegerField()
+    passage_at_week = models.IntegerField()
+    passage_at_day_of_week = models.IntegerField()  # day of week
+    passage_at_hour = models.IntegerField()
+
+    order_kaart = models.IntegerField(null=True, blank=True)  # in sheet: volgorde
+    order_naam = models.CharField(max_length=255, null=True, blank=True)  # in sheet: straatnaam
+    cordon = models.CharField(max_length=255, db_index=True, null=True, blank=True)
+    richting = models.CharField(max_length=3, null=True, blank=True)
+    location = models.PointField(srid=4326, null=True, blank=True)
+    geom = models.CharField(max_length=255, null=True, blank=True)
+    azimuth = models.FloatField()
+
+    kenteken_land = models.TextField()
+    voertuig_soort = models.CharField(max_length=25, null=True)
+    inrichting = models.CharField(max_length=255, null=True)
+    voertuig_klasse_toegestaan_gewicht = models.CharField(max_length=255, null=True, blank=True)
+    intensiteit = models.IntegerField(null=True, blank=True)
