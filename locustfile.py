@@ -1,11 +1,19 @@
 """
 This is a (much needed) load test for this repo. These are some example usages:
 
-locust --host=http://127.0.0.1:8001 --headless --users 250 --hatch-rate 25 --run-time 30s
+locust --host=http://127.0.0.1:8001 --headless --users 250 --spawn-rate 25 --run-time 30s
 """
+
+# std
+import csv
+import datetime
+import json
+import os
+import random
+import time
 from uuid import uuid4
-import datetime, time
-from locust import HttpUser, TaskSet, task, between
+# 3rd party
+from locust import HttpUser, task, between
 
 
 PASSAGE_ENDPOINT_URL = "/v0/milieuzone/passage/"
@@ -18,54 +26,68 @@ def get_dt_with_tz_info():
     return datetime.datetime.now().replace(tzinfo=datetime.timezone(offset=utc_offset)).isoformat()
 
 
+def load_data(filename):
+
+    def postprocess(d):
+
+        del d['count']
+
+        # '' -> undefined
+        for key in [k for k, v in d.items() if not v]:
+            del d[key]
+
+        # parse bool
+        if 'taxi_indicator' in d:
+            d['taxi_indicator'] = {'TRUE': True, 'FALSE': False}.get(d['taxi_indicator'], None)
+
+        # parse json fields
+        if 'brandstoffen' in d:
+            d['brandstoffen'] = json.loads(d['brandstoffen'].replace("'", '"'))
+
+        return d
+
+    with open(filename) as f:
+        # this will be our "pool" of values to choose from, multiply each
+        # item by the number of times it occurred to make it more likely that
+        # we will choose those.
+        return [
+            postprocess(dict(x))
+            for x in csv.DictReader(f)
+            for _ in range(int(x['count']))
+        ]
+
+
+# allow caller to provide camera / vehicle data, or default to unique camera
+# and vehicle data selected from 2021-09-01
+cameras = load_data(os.environ.get('CAMERA_CSV', '/opt/src/api/data/camera.csv'))
+vehicles = load_data(os.environ.get('VEHICLE_CSV', '/opt/src/api/data/vehicle.csv'))
+
+
+# make sure sampling is reproducible
+random.seed(0)
+
+
 def create_message():
-    return {
+    message = {
         "id": str(uuid4()),
         "passage_at": get_dt_with_tz_info(),
         "created_at": get_dt_with_tz_info(),
         "version": "1",
-        "straat": None,
-        "rijrichting": 1,
-        "rijstrook": 2,
-        "camera_id": "00856ef3-c6f5-4194-9531-a3267839674a",
-        "camera_naam": "Muntbergweg (s111) nabij afrit (A9) uit oost - Rijstrook 2",
-        "camera_kijkrichting": 337.5,
-        "camera_locatie": {
-            "type": "Point",
-            "coordinates": [
-                4.945936,
-                52.301221
-            ]
-        },
-        "kenteken_land": "NL",
-        "kenteken_nummer_betrouwbaarheid": 990,
-        "kenteken_land_betrouwbaarheid": 0,
-        "kenteken_karakters_betrouwbaarheid": None,
-        "indicatie_snelheid": None,
-        "automatisch_verwerkbaar": None,
-        "voertuig_soort": "Personenauto",
-        "merk": "SPYKER",
-        "inrichting": "stationwagen",
-        "datum_eerste_toelating": "2001-02-01",
-        "datum_tenaamstelling": "2001-02-02",
-        "toegestane_maximum_massa_voertuig": 4000,
-        "europese_voertuigcategorie": "M1",
-        "europese_voertuigcategorie_toevoeging": None,
-        "taxi_indicator": False,
-        "maximale_constructie_snelheid_bromsnorfiets": None,
-        "brandstoffen": [
+        "kenteken_nummer_betrouwbaarheid": random.randint(0, 1000),
+        "kenteken_land_betrouwbaarheid": random.randint(0, 1000),
+        "kenteken_karakters_betrouwbaarheid": [
             {
-                "volgnr": 1,
-                "brandstof": "Benzine",
-                "euroklasse": "Euro 3"
+                "positie": positie,
+                "betrouwbaarheid": random.randint(0, 1000),
             }
+            for positie in range(6)
         ],
-        "extra_data": None,
-        "diesel": None,
-        "gasoline": None,
-        "electric": None,
-        "versit_klasse": "LPABEUR3"
+        "indicatie_snelheid": random.randrange(0, 100),
+        "automatisch_verwerkbaar": random.sample((None, True, False), 1)[0],
+        **random.sample(cameras, 1)[0],
+        **random.sample(vehicles, 1)[0],
     }
+    return message
 
 
 class CarsBehaviour(HttpUser):
