@@ -28,32 +28,32 @@ def get_dt_with_tz_info():
 
 def load_data(filename):
 
-    def postprocess(d):
+    def postprocess(row):
 
-        del d['count']
+        del row['count']
 
         # '' -> undefined
-        for key in [k for k, v in d.items() if not v]:
-            del d[key]
+        for key in [key for key, value in row.items() if not value]:
+            del row[key]
 
         # parse bool
-        if 'taxi_indicator' in d:
-            d['taxi_indicator'] = {'TRUE': True, 'FALSE': False}.get(d['taxi_indicator'], None)
+        if 'taxi_indicator' in row:
+            row['taxi_indicator'] = {'TRUE': True, 'FALSE': False}.get(row['taxi_indicator'], None)
 
         # parse json fields
-        if 'brandstoffen' in d:
-            d['brandstoffen'] = json.loads(d['brandstoffen'].replace("'", '"'))
+        if 'brandstoffen' in row:
+            row['brandstoffen'] = json.loads(row['brandstoffen'].replace("'", '"'))
 
-        return d
+        return row
 
     with open(filename) as f:
         # this will be our "pool" of values to choose from, multiply each
         # item by the number of times it occurred to make it more likely that
         # we will choose those.
         return [
-            postprocess(dict(x))
-            for x in csv.DictReader(f)
-            for _ in range(int(x['count']))
+            postprocess(dict(row))
+            for row in csv.DictReader(f)
+            for _ in range(int(row['count']))
         ]
 
 
