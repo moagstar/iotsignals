@@ -6,7 +6,7 @@ from django.contrib.gis.geos import Point
 from django.utils import timezone
 from factory import fuzzy
 from factory.django import DjangoModelFactory
-from passage.models import Passage
+from passage.models import Passage, PassageCamera
 
 
 def get_puntje():
@@ -27,6 +27,19 @@ def kenteken_karakter_betrouwbaarheid():
 
 def get_brandstoffen():
     return [{'brandstof': 'Benzine', 'volgnr': 1}]
+
+
+class PassageCameraFactory(DjangoModelFactory):
+    class Meta:
+        model = PassageCamera
+
+    straat = factory.Faker('name')
+    rijstrook = fuzzy.FuzzyInteger(1, 10)
+    rijrichting = fuzzy.FuzzyInteger(-1, 1)
+    camera_id = factory.Faker('uuid4')
+    camera_naam = factory.Faker('name')
+    camera_kijkrichting = fuzzy.FuzzyInteger(0, 400)
+    camera_locatie = factory.LazyFunction(get_puntje)
 
 
 class PassageFactory(DjangoModelFactory):

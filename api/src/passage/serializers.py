@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from .errors import DuplicateIdError
-from .models import Passage
+from .models import Passage, PassageCamera, PassageVehicle
 
 log = logging.getLogger(__name__)
 
@@ -28,21 +28,16 @@ class PassageSerializer(HALSerializer):
         ]
 
 
-class PassageDetailSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(
-        validators=[]
-    )  # Disable the validators for the id, which improves performance (rps) by over 200%
-
+class PassageCameraSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Passage
-        fields = '__all__'
+        model = PassageCamera
+        exclude = 'id',
 
-    def create(self, validated_data):
-        try:
-            return super().create(validated_data)
-        except IntegrityError as e:
-            log.info(f"DuplicateIdError for id {validated_data['id']}")
-            raise DuplicateIdError(str(e))
+
+class PassageVehicleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PassageVehicle
+        exclude = 'id',
 
     def validate_datum_eerste_toelating(self, value):
         return date(year=value.year, month=1, day=1)
@@ -66,3 +61,37 @@ class PassageDetailSerializer(serializers.ModelSerializer):
                 data['inrichting'] = 'Personenauto'
 
         return data
+
+
+class PassageDetailSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(
+        validators=[]
+    )  # Disable the validators for the id, which improves performance (rps) by over 200%
+
+    class Meta:
+        model = Passage
+        fields = '__all__'
+
+    def create_related(self, validated_data, serializer):
+        """
+
+        """
+        fields = {x.name for x in serializer.Meta.model._meta.fields}
+        data = {k: v for k, v in validated_data.items() if k in fields}
+        s = serializer(data=data)
+        s.is_valid(raise_exception=True)
+        return s.save()
+
+    def create(self, validated_data):
+        try:
+            passage_camera = self.create_related(validated_data, PassageCameraSerializer)
+            passage_vehicle = self.create_related(validated_data, PassageVehicleSerializer)
+            validated_data = dict(
+                validated_data,
+                passage_camera=passage_camera,
+                passage_vehicle=passage_vehicle,
+            )
+            return super().create(validated_data)
+        except IntegrityError as e:
+            log.info(f"DuplicateIdError for id {validated_data['id']}")
+            raise DuplicateIdError(str(e))

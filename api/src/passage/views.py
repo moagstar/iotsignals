@@ -1,76 +1,24 @@
-from datetime import date, timedelta
-
+# std
+from datetime import timedelta
+# 3rd party
 from contrib.rest_framework.authentication import SimpleTokenAuthentication
-from datapunt_api.pagination import HALCursorPagination
-from datapunt_api.rest import DatapuntViewSetWritable
 from django.db.models import DateTimeField, ExpressionWrapper, F, Sum
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from django_filters.filterset import filterset_factory
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 from passage.case_converters import to_snakecase
 from passage.expressions import HoursInterval
-from rest_framework import exceptions, generics, mixins, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+# iotsignals
 from writers import CSVExport
-
 from . import models, serializers
 
 
-class PassageFilter(FilterSet):
-    class Meta(object):
-        model = models.Passage
-        fields = {
-            'merk': ['exact'],
-            'voertuig_soort': ['exact'],
-            'indicatie_snelheid': ['exact'],
-            'kenteken_nummer_betrouwbaarheid': ['exact'],
-            'version': ['exact'],
-            'kenteken_land': ['exact'],
-            'toegestane_maximum_massa_voertuig': ['exact'],
-            'europese_voertuigcategorie': ['exact'],
-            'europese_voertuigcategorie_toevoeging': ['exact'],
-            'taxi_indicator': ['exact'],
-            'maximale_constructie_snelheid_bromsnorfiets': ['exact'],
-            'created_at': ['exact', 'lt', 'gt'],
-            'passage_at': ['exact', 'lt', 'gt'],
-            'diesel': ['isnull', 'exact', 'lt', 'gt'],
-            'gasoline': ['isnull', 'exact', 'lt', 'gt'],
-            'electric': ['isnull', 'exact', 'lt', 'gt'],
-        }
-
-
-"""
-from dateutil import tz
-
-utcnow = datetime.datetime.utcnow().replace(tzinfo=tz.gettz('UTC'))
-"""
-
-
-class PassagePager(HALCursorPagination):
-    """Sidcon pagination configuration.
-
-    Fill-levels will be many. So we use cursor based pagination.
-    """
-
-    count_table = False
-    page_size = 50
-    max_page_size = 10000
-    ordering = "-passage_at"
-
-
 class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+
     serializer_class = serializers.PassageDetailSerializer
     serializer_detail_class = serializers.PassageDetailSerializer
-
-    queryset = models.Passage.objects.all().order_by('passage_at')
-
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = PassageFilter
-
-    pagination_class = PassagePager
 
     # override create to convert request.data from camelcase to snakecase.
     def create(self, request, *args, **kwargs):
