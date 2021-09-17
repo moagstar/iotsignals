@@ -40,8 +40,6 @@ INSTALLED_APPS += [
     'passage',
 ]
 
-ROOT_URLCONF = 'iotsignals.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -57,8 +55,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'iotsignals.wsgi.application'
 
 
 # Database

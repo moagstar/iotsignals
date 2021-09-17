@@ -1,21 +1,31 @@
 # std
-import json
-from functools import partial
+from collections import OrderedDict, defaultdict
 from hashlib import sha1
 # 3rd party
-from typing import Type, Callable, TypeVar
-
+from typing import Type, Callable
 from datetimeutc.fields import DateTimeUTCField
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.gis.db import models
 from rest_framework.renderers import JSONRenderer
-from unittest.mock import patch
 
-from rest_framework.serializers import Serializer
+from passage.util import profile
 
 
-C = TypeVar('C')
+class LRUCache:
+
+    def __init__(self, maxlen):
+        self._cache = OrderedDict()
+        self.maxlen = maxlen
+
+    def __contains__(self, item):
+        if result := (item in self._cache):
+            self._cache.move_to_end(item)
+        else:
+            if len(self._cache) == self.maxlen:
+                self._cache.popitem(last=False)
+            self._cache[item] = None
+        return result
 
 
 class AppendOnlyModel(models.Model):
@@ -27,35 +37,23 @@ class AppendOnlyModel(models.Model):
 
     id = models.CharField(max_length=40, primary_key=True, unique=True)
 
-    def _do_insert(self, manager, using, fields, update_pk, raw):
-        # override _do_insert to ensure we ignore any conflicts which would
-        # occur when this entity already exists in the database - we don't
-        # get much control over this, it would be nice to specify that it is
-        # only the pk conflict which we should ignore (this should be possible
-        # in postgres, but is not exposed by django).
-        return manager._insert([self], fields=fields, return_id=update_pk,
-                               using=using, raw=raw, ignore_conflicts=True)
+    _caches = defaultdict(lambda: LRUCache(2 ** 16))
 
     def save(self, *args, **kwargs):
 
-        serializer_factory = self._get_serializer_factory()
-        serializer = serializer_factory(self)
+        serializer = self._get_serializer_factory()(self)
+        serialized = JSONRenderer().render(serializer.data)
+        self.id = sha1(serialized).hexdigest()
 
-        # rest_framework JSONRenderer does not support the sort_keys argument
-        # for json.dumps (see https://github.com/encode/django-rest-framework/pull/8166)
-        # but we want a stable serialisation, regardless of the key order. Once
-        # sort_keys is supported we could remove this nasty patching
-        with patch('rest_framework.renderers.json.dumps', partial(json.dumps, sort_keys=True)):
-            serialized = JSONRenderer().render(serializer.data)
-            self.id = sha1(serialized).hexdigest()
-
-        return super().save(*args, **kwargs)
+        cache = self._caches[self.__class__]
+        if self.id not in cache and not self.__class__.objects.filter(id=self.id).exists():
+            super().save(*args, **kwargs)
 
     class Meta:
         abstract = True
 
     @classmethod
-    def _get_serializer_factory(cls: C) -> Callable[[Type[C]], Serializer]:
+    def _get_serializer_factory(cls):
         """
         Return the factory for generating a serialiser for serializing instances
         of `cls`
@@ -80,7 +78,7 @@ class PassageCamera(AppendOnlyModel):
     camera_locatie = models.PointField(srid=4326)
 
     @classmethod
-    def _get_serializer_factory(cls: C) -> Callable[[Type[C]], Serializer]:
+    def _get_serializer_factory(cls):
         # prevent circular import
         from passage.serializers import PassageCameraSerializer
         return PassageCameraSerializer
@@ -114,7 +112,7 @@ class PassageVehicle(AppendOnlyModel):
     versit_klasse = models.CharField(null=True, max_length=255)
 
     @classmethod
-    def _get_serializer_factory(cls: C) -> Callable[[Type[C]], Serializer]:
+    def _get_serializer_factory(cls):
         # prevent circular import
         from passage.serializers import PassageVehicleSerializer
         return PassageVehicleSerializer

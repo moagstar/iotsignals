@@ -20,7 +20,7 @@ class TestAppendOnlyModel:
         instance1.save()
         instance2 = PassageCamera(**stub.__dict__)
         instance2.save()
-        assert PassageCamera.objects.filter(id=instance1.id).exists()
+        assert PassageCamera.objects.filter(id=instance1.id)._existing_ids()
         assert PassageCamera.objects.count() == 1
         assert instance1.id == instance2.id
 
@@ -31,8 +31,8 @@ class TestAppendOnlyModel:
         stub2 = PassageCameraFactory.stub()
         instance2 = PassageCamera(**stub2.__dict__)
         instance2.save()
-        assert PassageCamera.objects.filter(id=instance1.id).exists()
-        assert PassageCamera.objects.filter(id=instance2.id).exists()
+        assert PassageCamera.objects.filter(id=instance1.id)._existing_ids()
+        assert PassageCamera.objects.filter(id=instance2.id)._existing_ids()
         assert PassageCamera.objects.count() == 2
         assert instance1.id != instance2.id
 

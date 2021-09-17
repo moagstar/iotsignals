@@ -114,7 +114,7 @@ class TestZwaarVerkeerAggregation:
         for day in other_days:
             assert HeavyTrafficHourAggregation.objects.filter(
                 passage_at_timestamp=day.replace(minute=0, second=0, microsecond=0)
-            ).exists()
+            )._existing_ids()
 
         # check extracted datetime info
         assert result.passage_at_timestamp == expected_timestamp

@@ -18,3 +18,4 @@ model_bakery
 isort
 black
 time-machine
+pyinstrument

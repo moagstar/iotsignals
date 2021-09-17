@@ -1,13 +1,13 @@
 select
-    md5(kenteken_land) as kenteken_land,
-    md5(voertuig_soort) as voertuig_soort,
-    md5(merk) as merk,
-    md5(inrichting) as inrichting,
+    kenteken_land as kenteken_land,
+    voertuig_soort as voertuig_soort,
+    merk as merk,
+    inrichting as inrichting,
     datum_eerste_toelating,
     NULL as datum_tenaamstelling,  -- datum_tenaamstelling
     toegestane_maximum_massa_voertuig,
-    md5(europese_voertuigcategorie) as europese_voertuigcategorie,
-    md5(europese_voertuigcategorie_toevoeging) as europese_voertuigcategorie_toevoeging,
+    europese_voertuigcategorie as europese_voertuigcategorie,
+    europese_voertuigcategorie_toevoeging as europese_voertuigcategorie_toevoeging,
     case when taxi_indicator then 'TRUE' else 'FALSE' end as taxi_indicator,
     maximale_constructie_snelheid_bromsnorfiets,
     brandstoffen,
@@ -15,7 +15,7 @@ select
     diesel,
     gasoline,
     electric,
-    md5(versit_klasse) as versit_klasse,
+    versit_klasse as versit_klasse,
     count(*)
 from passage_passage_20210901
 group by

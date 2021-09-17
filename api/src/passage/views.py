@@ -2,6 +2,7 @@
 from datetime import timedelta
 # 3rd party
 from contrib.rest_framework.authentication import SimpleTokenAuthentication
+from django.conf import settings
 from django.db.models import DateTimeField, ExpressionWrapper, F, Sum
 from django.utils import timezone
 from django_filters.filterset import filterset_factory
@@ -20,12 +21,16 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = serializers.PassageDetailSerializer
     serializer_detail_class = serializers.PassageDetailSerializer
 
+    def get_exception_handler(self):
+        return lambda exception, context: None if settings.DEBUG else super().get_exception_handler()
+
     # override create to convert request.data from camelcase to snakecase.
     def create(self, request, *args, **kwargs):
         tmp = {to_snakecase(k): v for k, v in request.data.items()}
         request.data.clear()
         request.data.update(tmp)
-        return super().create(request, *args, **kwargs)
+        result = super().create(request, *args, **kwargs)
+        return result
 
     @action(methods=['get'], detail=False, url_path='export-taxi')
     def export_taxi(self, request, *args, **kwargs):
