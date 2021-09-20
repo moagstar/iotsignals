@@ -33,14 +33,14 @@ class PassageCameraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassageCamera
-        exclude = 'id',
+        exclude = 'id', 'hash',
 
 
 class PassageVehicleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassageVehicle
-        exclude = 'id',
+        exclude = 'id', 'hash',
 
     def validate_datum_eerste_toelating(self, value):
         return date(year=value.year, month=1, day=1)

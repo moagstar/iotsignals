@@ -19,12 +19,12 @@ class LRUCache:
         self.maxlen = maxlen
 
     def __contains__(self, item):
-        if result := (item in self._cache):
-            self._cache.move_to_end(item)
+        if result := (item.hash in self._cache):
+            self._cache.move_to_end(item.hash)
         else:
             if len(self._cache) == self.maxlen:
                 self._cache.popitem(last=False)
-            self._cache[item] = None
+            self._cache[item.hash] = item.id
         return result
 
 
@@ -35,19 +35,24 @@ class AppendOnlyModel(models.Model):
     be taken with migrations which add or remove fields
     """
 
-    id = models.CharField(max_length=40, primary_key=True, unique=True)
+    hash = models.CharField(max_length=40, unique=True)
 
-    _caches = defaultdict(lambda: LRUCache(2 ** 16))
+    #_caches = defaultdict(lambda: LRUCache(2 ** 16))
+    cache = {}
 
     def save(self, *args, **kwargs):
 
         serializer = self._get_serializer_factory()(self)
         serialized = JSONRenderer().render(serializer.data)
-        self.id = sha1(serialized).hexdigest()
+        self.hash = sha1(serialized).hexdigest()
 
-        cache = self._caches[self.__class__]
-        if self.id not in cache and not self.__class__.objects.filter(id=self.id).exists():
-            super().save(*args, **kwargs)
+        if (id := self.cache.get(self.hash)) is None:
+            self.id = next(iter(self.__class__.objects.filter(hash=self.hash).values_list('id', flat=True)), None)
+            if self.id is None:
+                super().save(*args, **kwargs)
+            self.cache[self.hash] = self.id
+        else:
+            self.id = id
 
     class Meta:
         abstract = True
