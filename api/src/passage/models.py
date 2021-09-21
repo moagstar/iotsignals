@@ -4,7 +4,7 @@ from hashlib import sha1
 # 3rd party
 from typing import Type, Callable
 from datetimeutc.fields import DateTimeUTCField
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.gis.db import models
 from rest_framework.renderers import JSONRenderer
@@ -104,6 +104,7 @@ class PassageVehicle(AppendOnlyModel):
     europese_voertuigcategorie_toevoeging = models.CharField(max_length=1, null=True)
     taxi_indicator = models.NullBooleanField()
     maximale_constructie_snelheid_bromsnorfiets = models.SmallIntegerField(null=True)
+    automatisch_verwerkbaar = models.NullBooleanField()
 
     # fuel properties
     brandstoffen = JSONField(null=True)
@@ -123,6 +124,12 @@ class PassageVehicle(AppendOnlyModel):
         return PassageVehicleSerializer
 
 
+class BetrouwbaarheidField(models.SmallIntegerField):
+    def __init__(self, *args, **kwargs):
+        kwargs['validators'] = [MaxValueValidator(1000), MinValueValidator(0)]
+        super().__init__(*args, **kwargs)
+
+
 class Passage(models.Model):
     """Passage measurement.
 
@@ -136,18 +143,13 @@ class Passage(models.Model):
 
     version = models.CharField(max_length=20)
 
-    kenteken_nummer_betrouwbaarheid = models.SmallIntegerField(
-        validators=[MaxValueValidator(1000), MinValueValidator(0)]
-    )
-    kenteken_land_betrouwbaarheid = models.SmallIntegerField(
-        validators=[MaxValueValidator(1000), MinValueValidator(0)]
-    )
-    kenteken_karakters_betrouwbaarheid = JSONField(null=True)
+    kenteken_nummer_betrouwbaarheid = BetrouwbaarheidField()
+    kenteken_land_betrouwbaarheid = BetrouwbaarheidField()
+    kenteken_karakters_betrouwbaarheid = ArrayField(BetrouwbaarheidField(), null=True)
     indicatie_snelheid = models.FloatField(null=True)
-    automatisch_verwerkbaar = models.NullBooleanField()
 
-    passage_camera = models.ForeignKey(PassageCamera, on_delete=models.PROTECT, null=True)
-    passage_vehicle = models.ForeignKey(PassageVehicle, on_delete=models.PROTECT, null=True)
+    passage_camera_id = models.IntegerField(null=True)
+    passage_vehicle_id = models.IntegerField(null=True)
 
 
 class PassageHourAggregation(models.Model):

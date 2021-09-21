@@ -26,11 +26,27 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     # override create to convert request.data from camelcase to snakecase.
     def create(self, request, *args, **kwargs):
-        tmp = {to_snakecase(k): v for k, v in request.data.items()}
+
+        tmp = {
+            to_snakecase(key): value
+            for key, value in request.data.items()
+        }
+
+        sorted_chars = sorted(
+            tmp['kenteken_karakters_betrouwbaarheid'],
+            key=lambda character: character['positie'],
+        )
+
         request.data.clear()
-        request.data.update(tmp)
-        result = super().create(request, *args, **kwargs)
-        return result
+        request.data.update(
+            tmp,
+            kenteken_karakters_betrouwbaarheid=[
+                character['betrouwbaarheid']
+                for character in sorted_chars
+            ]
+        )
+
+        return super().create(request, *args, **kwargs)
 
     @action(methods=['get'], detail=False, url_path='export-taxi')
     def export_taxi(self, request, *args, **kwargs):

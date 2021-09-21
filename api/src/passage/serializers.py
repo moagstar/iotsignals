@@ -86,13 +86,16 @@ class PassageDetailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             with atomic():
+
                 passage_camera = self._create_related(PassageCameraSerializer)
                 passage_vehicle = self._create_related(PassageVehicleSerializer)
+
                 validated_data = dict(
                     validated_data,
-                    passage_camera=passage_camera,
-                    passage_vehicle=passage_vehicle,
+                    passage_camera_id=passage_camera.id,
+                    passage_vehicle_id=passage_vehicle.id,
                 )
+
             return super().create(validated_data)
         except IntegrityError as e:
             log.info(f"DuplicateIdError for id {validated_data['id']}")

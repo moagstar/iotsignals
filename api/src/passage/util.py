@@ -1,6 +1,6 @@
 import contextlib
 
-from pyinstrument import Profiler
+#from pyinstrument import Profiler
 
 @contextlib.contextmanager
 def profile(*args, **kwargs):
