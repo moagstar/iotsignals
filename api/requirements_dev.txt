@@ -18,7 +18,7 @@ certifi==2021.5.30
     #   geventhttpclient
     #   requests
     #   sentry-sdk
-charset-normalizer==2.0.5
+charset-normalizer==2.0.6
     # via
     #   -r ./requirements.txt
     #   requests
@@ -53,6 +53,7 @@ django==2.2.24
     #   django-debug-toolbar
     #   django-extensions
     #   django-filter
+    #   django-redis
     #   djangorestframework
     #   drf-yasg
     #   model-bakery
@@ -63,6 +64,8 @@ django-debug-toolbar==3.2.2
 django-extensions==3.1.3
     # via -r ./requirements.txt
 django-filter==2.4.0
+    # via -r ./requirements.txt
+django-redis==5.0.0
     # via -r ./requirements.txt
 djangorestframework==3.12.4
     # via
@@ -140,7 +143,7 @@ jinja2==3.0.1
     #   -r ./requirements.txt
     #   coreschema
     #   flask
-locust==2.2.2
+locust==2.2.3
     # via -r requirements_dev.in
 markupsafe==2.0.1
     # via
@@ -211,6 +214,10 @@ pytz==2021.1
     #   django
 pyzmq==22.3.0
     # via locust
+redis==3.5.3
+    # via
+    #   -r ./requirements.txt
+    #   django-redis
 regex==2021.8.28
     # via black
 requests==2.26.0

@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 # iotsignals
 from writers import CSVExport
 from . import models, serializers
+from .util import profile
 
 
 class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -24,29 +25,28 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def get_exception_handler(self):
         return lambda exception, context: None if settings.DEBUG else super().get_exception_handler()
 
-    # override create to convert request.data from camelcase to snakecase.
+    def preprocess_data(self, data):
+        """
+        Preprocess the POST data:
+         - convert camel to snake case
+         - convert json blob for number plate accuracy to list of integers
+         - anonymise fields
+        """
+        result = {to_snakecase(key): value for key, value in data.items()}
+
+        if (accuracy := result['kenteken_karakters_betrouwbaarheid']) is not None:
+            sorted_chars = sorted(accuracy, key=lambda c: c['positie'])
+            accuracy = [c['betrouwbaarheid'] for c in sorted_chars]
+            result['kenteken_karakters_betrouwbaarheid'] = accuracy
+
+        # TODO: Anonymise fields (if necessary)
+
+    # override create to convert preprocess request.data
     def create(self, request, *args, **kwargs):
-
-        tmp = {
-            to_snakecase(key): value
-            for key, value in request.data.items()
-        }
-
-        sorted_chars = sorted(
-            tmp['kenteken_karakters_betrouwbaarheid'],
-            key=lambda character: character['positie'],
-        )
-
-        request.data.clear()
-        request.data.update(
-            tmp,
-            kenteken_karakters_betrouwbaarheid=[
-                character['betrouwbaarheid']
-                for character in sorted_chars
-            ]
-        )
-
-        return super().create(request, *args, **kwargs)
+        with profile():
+            request.data.clear()
+            request.data.update(self.preprocess_data(self.request.data))
+            return super().create(request, *args, **kwargs)
 
     @action(methods=['get'], detail=False, url_path='export-taxi')
     def export_taxi(self, request, *args, **kwargs):

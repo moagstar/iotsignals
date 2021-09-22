@@ -1,4 +1,5 @@
 # std
+import json
 from collections import OrderedDict, defaultdict
 from hashlib import sha1
 # 3rd party
@@ -8,24 +9,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.gis.db import models
 from rest_framework.renderers import JSONRenderer
-
-from passage.util import profile
-
-
-class LRUCache:
-
-    def __init__(self, maxlen):
-        self._cache = OrderedDict()
-        self.maxlen = maxlen
-
-    def __contains__(self, item):
-        if result := (item.hash in self._cache):
-            self._cache.move_to_end(item.hash)
-        else:
-            if len(self._cache) == self.maxlen:
-                self._cache.popitem(last=False)
-            self._cache[item.hash] = item.id
-        return result
+from django.core.cache import cache
 
 
 class AppendOnlyModel(models.Model):
@@ -34,25 +18,7 @@ class AppendOnlyModel(models.Model):
     contents. It is therefore not possible to update exist records. Care must
     be taken with migrations which add or remove fields
     """
-
     hash = models.CharField(max_length=40, unique=True)
-
-    #_caches = defaultdict(lambda: LRUCache(2 ** 16))
-    cache = {}
-
-    def save(self, *args, **kwargs):
-
-        serializer = self._get_serializer_factory()(self)
-        serialized = JSONRenderer().render(serializer.data)
-        self.hash = sha1(serialized).hexdigest()
-
-        if (id := self.cache.get(self.hash)) is None:
-            self.id = next(iter(self.__class__.objects.filter(hash=self.hash).values_list('id', flat=True)), None)
-            if self.id is None:
-                super().save(*args, **kwargs)
-            self.cache[self.hash] = self.id
-        else:
-            self.id = id
 
     class Meta:
         abstract = True
@@ -148,8 +114,8 @@ class Passage(models.Model):
     kenteken_karakters_betrouwbaarheid = ArrayField(BetrouwbaarheidField(), null=True)
     indicatie_snelheid = models.FloatField(null=True)
 
-    passage_camera_id = models.IntegerField(null=True)
-    passage_vehicle_id = models.IntegerField(null=True)
+    passage_camera = models.ForeignKey(PassageCamera, null=True, on_delete=models.PROTECT)
+    passage_vehicle = models.ForeignKey(PassageVehicle, null=True, on_delete=models.PROTECT)
 
 
 class PassageHourAggregation(models.Model):
