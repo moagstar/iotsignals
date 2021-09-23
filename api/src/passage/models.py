@@ -98,7 +98,7 @@ class Camera(models.Model):
     azimuth = models.FloatField(null=True, blank=True)
 
 
-class HeavyTrafficHourAggregation(models.Model):
+class HourAggregationBase(models.Model):
     passage_at_timestamp = DateTimeUTCField()
     passage_at_date = models.DateField()
     passage_at_year = models.IntegerField()
@@ -109,7 +109,8 @@ class HeavyTrafficHourAggregation(models.Model):
     passage_at_hour = models.IntegerField()
 
     order_kaart = models.IntegerField(null=True, blank=True)  # in sheet: volgorde
-    order_naam = models.CharField(max_length=255, null=True, blank=True)  # in sheet: straatnaam
+    order_naam = models.CharField(max_length=255, null=True,
+                                  blank=True)  # in sheet: straatnaam
     cordon = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     richting = models.CharField(max_length=3, null=True, blank=True)
     location = models.PointField(srid=4326, null=True, blank=True)
@@ -117,7 +118,18 @@ class HeavyTrafficHourAggregation(models.Model):
     azimuth = models.FloatField()
 
     kenteken_land = models.TextField()
+    intensiteit = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class HeavyTrafficHourAggregation(HourAggregationBase):
     voertuig_soort = models.CharField(max_length=25, null=True)
     inrichting = models.CharField(max_length=255, null=True)
     voertuig_klasse_toegestaan_gewicht = models.CharField(max_length=255, null=True, blank=True)
-    intensiteit = models.IntegerField(null=True, blank=True)
+
+
+class IGORHourAggregation(HourAggregationBase):
+    taxi_indicator = models.NullBooleanField()
+    europese_voertuigcategorie = models.CharField(max_length=2, null=True)
