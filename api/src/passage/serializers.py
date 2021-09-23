@@ -34,16 +34,42 @@ class PassageSerializer(HALSerializer):
         ]
 
 
-class PassageCameraSerializer(serializers.ModelSerializer):
+class AppendOnlyModelSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = PassageCamera
         exclude = 'id', 'hash',
+
+    @classmethod
+    def _data_for_hash(cls, data):
+        return {
+            key: value
+            for key, value in data.items()
+            if key in {field.name for field in cls.Meta.model._meta.fields}
+            if key not in cls.Meta.exclude
+        }
+
+    @classmethod
+    def hash(cls, data):
+        data_for_hash = cls._data_for_hash(data)
+        rendered = json.dumps(data_for_hash, sort_keys=True, separators=(',', ':')).encode()
+        return md5(rendered).hexdigest()
+
+
+class PassageCameraSerializer(AppendOnlyModelSerializer):
+    class Meta(AppendOnlyModelSerializer.Meta):
+        model = PassageCamera
+
+    @classmethod
+    def _data_for_hash(cls, data):
+        return {
+            **super()._data_for_hash(data),
+            'camera_locatie': None,
+        }
 
 
 class PassageVehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassageVehicle
-        exclude = 'id', 'hash',
 
 
 class PassageDetailSerializer(serializers.ModelSerializer):
@@ -69,25 +95,17 @@ class PassageDetailSerializer(serializers.ModelSerializer):
         # already exists in the database. We can use the hash as a cache key
         # so that most of the time we don't even need to hit the database to
         # determine if the object exists or not.
-        data = {
-            key: value
-            for key, value in self.initial_data.items()
-            if key in {field.name for field in model._meta.fields}
-            if key != 'id'
-        }
-        serialized = json.dumps(data, sort_keys=True).encode()
-        hash = md5(serialized).hexdigest()
 
         # Check first the cache, then the database to see if the object exists,
         # only when a camera / vehicle without these properties has not already
         # been added do we need to perform a save.
-        if (id := cache.get(hash)) is None:
+        if True:#(id := cache.get(hash)) is None:
             id = next(iter(model.objects.filter(hash=hash).values_list('id', flat=True)), None)
             if id is None:
-                instance = model(**data)
-                instance.save()
-                id = instance.id
-            cache.set(hash, id)
+                s = serializer_cls(data=self.initial_data)
+                s.is_valid(raise_exception=True)
+                id = s.save(hash=hash).id
+            #cache.set(hash, id)
 
         return id
 

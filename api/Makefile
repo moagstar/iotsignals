@@ -6,7 +6,7 @@
 PYTHON = python3
 
 dc = docker-compose
-run = $(dc) run --rm
+run = $(dc) run --rm --user "$(id -u):$(id -g)"
 manage = $(run) dev python manage.py
 
 help:                               ## Show this help.

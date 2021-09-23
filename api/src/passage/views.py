@@ -39,13 +39,16 @@ class PassageViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             accuracy = [c['betrouwbaarheid'] for c in sorted_chars]
             result['kenteken_karakters_betrouwbaarheid'] = accuracy
 
+        return result
+
         # TODO: Anonymise fields (if necessary)
 
     # override create to convert preprocess request.data
     def create(self, request, *args, **kwargs):
-        with profile():
+        #with profile():
+            data = self.preprocess_data(self.request.data)
             request.data.clear()
-            request.data.update(self.preprocess_data(self.request.data))
+            request.data.update(data)
             return super().create(request, *args, **kwargs)
 
     @action(methods=['get'], detail=False, url_path='export-taxi')

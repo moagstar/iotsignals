@@ -83,6 +83,24 @@ class PassageVehicle(AppendOnlyModel):
     # Zie ook: https://www.tno.nl/media/2451/lowres_tno_versit.pdf
     versit_klasse = models.CharField(null=True, max_length=255)
 
+    # new fields
+    pseudokenteken = models.CharField(max_length=255, null=True)
+    vervaldatum_apk = models.DateField(null=True)
+    wam_verzekerd = models.NullBooleanField()
+    massa_ledig_voertuig = models.SmallIntegerField(null=True)
+    aantal_assen = models.SmallIntegerField(null=True)
+    aantal_staanplaatsen = models.SmallIntegerField(null=True)
+    aantal_wielen = models.SmallIntegerField(null=True)
+    aantal_zitplaatsen = models.SmallIntegerField(null=True)
+    handelsbenaming = models.CharField(max_length=255, null=True)
+    lengte = models.SmallIntegerField(null=True)
+    breedte = models.SmallIntegerField(null=True)
+    maximum_massa_trekken_ongeremd = models.FloatField(null=True)
+    maximum_massa_trekken_geremd = models.FloatField(null=True)
+    co2_uitstoot_gecombineerd = models.FloatField(null=True)
+    co2_uitstoot_gewogen = models.FloatField(null=True)
+    milieuklasse_eg_goedkeuring_zwaar = models.CharField(max_length=255, null=True)
+
     @classmethod
     def _get_serializer_factory(cls):
         # prevent circular import

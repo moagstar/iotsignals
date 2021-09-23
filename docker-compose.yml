@@ -8,12 +8,19 @@ services:
       POSTGRES_DB: iotsignals
       POSTGRES_USER: iotsignals
       POSTGRES_PASSWORD: insecure
+
+  cache:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
   api: &api
     build: ./api
     volumes:
       - ./api/src:/app
     depends_on:
       - database
+      - cache
     ports:
       - "8001:8001"
     environment:
@@ -55,7 +62,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
     links:
       - api
-    command: bash -c "locust -f /opt/src/locustfile.py --host=http://api:8001 --headless --users 250 --hatch-rate 25 --run-time 600s"
+    command: bash -c "locust -f /opt/src/locustfile.py --host=http://api:8001 --headless --users 250 --hatch-rate 25 --run-time 30s"
 
   passage_hour_aggregation:
     build: ./api

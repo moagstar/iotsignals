@@ -11,6 +11,7 @@ import json
 import os
 import random
 import time
+from pathlib import Path
 from uuid import uuid4
 # 3rd party
 from locust import HttpUser, task, between
@@ -59,23 +60,54 @@ def load_data(filename):
 
 # allow caller to provide camera / vehicle data, or default to unique camera
 # and vehicle data selected from 2021-09-01
-try:
-    cameras = load_data(os.environ.get('CAMERA_CSV', '/opt/src/api/data/camera.csv'))
-    vehicles = load_data(os.environ.get('VEHICLE_CSV', '/opt/src/api/data/vehicle.csv'))
-except:
-    pass
+__dir__ = Path(__file__).parent
+cameras = load_data(__dir__/'api'/'data'/'camera.csv')
+vehicles = load_data(__dir__/'api'/'data'/'vehicle.csv')
 
 
 # make sure sampling is reproducible
 random.seed(0)
 
 
-def create_message():
+def vehicle(version=1):
+    result = random.sample(vehicles, 1)[0]
+
+    # TODO: select this in vehicle.sql and store in vehicle.csv
+    result["automatisch_verwerkbaar"] = True
+
+    if version == 2:
+        # extra fields in version 2, just make a simple model whereby the other
+        # data is enough to make vehicles unique, which means we can just use
+        # constant values here. It's almost certainly not the case, but let's
+        # just keep it simple for now.
+        result.update({
+            "pseudokenteken": "11AA11",
+            "vervaldatum_apk": "2017-01-01",
+            "wam_verzekerd": True,
+            "massa_ledig_voertuig": 1280,
+            "aantal_assen": 2,
+            "aantal_staan_plaatsen": 10,
+            "aantal_wielen": 6,
+            "aantal_zit_plaatsen": 50,
+            "handelsbenaming": "S40",
+            "lengte": 507,
+            "breedte": 203,
+            "maximum_massa_trekken_ongeremd": 1280,
+            "maximum_massa_trekken_geremd": 1300,
+            "co2_uitstoot_gecombineerd": 7.30,
+            "co2_uitstoot_gewogen": 7.50,
+            "milieuklasse_eg_goedkeuring_zwaar": "595/2009*2018/932D",
+        })
+
+    return result
+
+
+def create_message(version):
     message = {
         "id": str(uuid4()),
         "passage_at": get_dt_with_tz_info(),
         "created_at": get_dt_with_tz_info(),
-        "version": "1",
+        "version": str(version),
         "kenteken_nummer_betrouwbaarheid": random.randint(0, 1000),
         "kenteken_land_betrouwbaarheid": random.randint(0, 1000),
         "kenteken_karakters_betrouwbaarheid": [
@@ -86,9 +118,8 @@ def create_message():
             for positie in range(6)
         ],
         "indicatie_snelheid": random.randrange(0, 100),
-        "automatisch_verwerkbaar": random.sample((None, True, False), 1)[0],
         **random.sample(cameras, 1)[0],
-        **random.sample(vehicles, 1)[0],
+        **vehicle(version),
     }
     return message
 
@@ -99,4 +130,4 @@ class CarsBehaviour(HttpUser):
 
     @task(1)
     def post_cars(self):
-        self.client.post(PASSAGE_ENDPOINT_URL, json=create_message())
+        self.client.post(PASSAGE_ENDPOINT_URL, json=create_message(2))
